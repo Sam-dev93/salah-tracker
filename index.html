@@ -520,6 +520,67 @@
             background: #CC3333;
         }
 
+        /* Install prompt styles */
+        .install-prompt {
+            position: fixed;
+            bottom: 20px;
+            left: 50%;
+            transform: translateX(-50%);
+            background: #10A37F;
+            color: white;
+            padding: 16px 24px;
+            border-radius: 12px;
+            box-shadow: 0 4px 20px rgba(0, 0, 0, 0.3);
+            display: none;
+            z-index: 2000;
+            max-width: 90%;
+            text-align: center;
+            animation: slideUp 0.3s ease;
+        }
+
+        .install-prompt.show {
+            display: block;
+        }
+
+        .install-prompt-text {
+            margin-bottom: 12px;
+            font-weight: 600;
+        }
+
+        .install-buttons {
+            display: flex;
+            gap: 8px;
+            justify-content: center;
+        }
+
+        .install-btn {
+            background: white;
+            color: #10A37F;
+            border: none;
+            padding: 8px 16px;
+            border-radius: 6px;
+            font-weight: 600;
+            cursor: pointer;
+            font-size: 14px;
+        }
+
+        .install-btn.dismiss {
+            background: transparent;
+            color: white;
+            border: 1px solid rgba(255, 255, 255, 0.3);
+        }
+
+        @keyframes slideUp {
+            from {
+                transform: translateX(-50%) translateY(100px);
+                opacity: 0;
+            }
+            to {
+                transform: translateX(-50%) translateY(0);
+                opacity: 1;
+            }
+        }
+
         /* PWA specific styles */
         @media (display-mode: fullscreen) {
             body {
@@ -643,6 +704,17 @@
         </div>
     </div>
 
+    <!-- Install Prompt -->
+    <div id="installPrompt" class="install-prompt">
+        <div class="install-prompt-text">
+            📱 Install Salah Tracker as an app for quick access!
+        </div>
+        <div class="install-buttons">
+            <button class="install-btn" onclick="installApp()">Install</button>
+            <button class="install-btn dismiss" onclick="dismissInstall()">Maybe Later</button>
+        </div>
+    </div>
+
     <!-- Prayer Status Modal -->
     <div id="prayerModal" class="modal">
         <div class="modal-content">
@@ -716,6 +788,92 @@
 
         const prayers = ['fajr', 'zuhr', 'asr', 'maghrib', 'isha'];
         const prayerNames = ['Fajr', 'Zuhr', 'Asr', 'Maghrib', 'Isha'];
+
+        // PWA Install Prompt
+        let deferredPrompt;
+        let installPromptShown = false;
+
+        // Listen for the beforeinstallprompt event
+        window.addEventListener('beforeinstallprompt', (e) => {
+            // Prevent the mini-infobar from appearing on mobile
+            e.preventDefault();
+            // Store the event so it can be triggered later
+            deferredPrompt = e;
+            
+            // Show custom install prompt after user has used the app a bit
+            setTimeout(() => {
+                if (!installPromptShown && !localStorage.getItem('installPromptDismissed')) {
+                    showInstallPrompt();
+                }
+            }, 3000); // Show after 3 seconds of use
+        });
+
+        // Check if app is already installed
+        window.addEventListener('appinstalled', () => {
+            console.log('PWA was installed');
+            hideInstallPrompt();
+            localStorage.setItem('installPromptDismissed', 'true');
+        });
+
+        function showInstallPrompt() {
+            // Don't show if already in standalone mode (already installed)
+            if (window.matchMedia('(display-mode: standalone)').matches) {
+                return;
+            }
+            
+            installPromptShown = true;
+            document.getElementById('installPrompt').classList.add('show');
+        }
+
+        function installApp() {
+            if (deferredPrompt) {
+                // Show the install prompt
+                deferredPrompt.prompt();
+                
+                // Wait for the user to respond to the prompt
+                deferredPrompt.userChoice.then((choiceResult) => {
+                    if (choiceResult.outcome === 'accepted') {
+                        console.log('User accepted the install prompt');
+                    } else {
+                        console.log('User dismissed the install prompt');
+                    }
+                    deferredPrompt = null;
+                });
+            } else {
+                // Fallback for browsers that don't support the install prompt
+                // Show instructions for manual installation
+                if (navigator.userAgent.includes('iPhone') || navigator.userAgent.includes('iPad')) {
+                    alert('To install:\n1. Tap the Share button\n2. Select "Add to Home Screen"');
+                } else {
+                    alert('To install:\nLook for the "Install" button in your browser\'s address bar');
+                }
+            }
+            
+            hideInstallPrompt();
+        }
+
+        function dismissInstall() {
+            hideInstallPrompt();
+            localStorage.setItem('installPromptDismissed', 'true');
+        }
+
+        function hideInstallPrompt() {
+            document.getElementById('installPrompt').classList.remove('show');
+        }
+
+        // Check for iOS Safari and show helpful message
+        function checkiOSInstall() {
+            const isIOS = /iPad|iPhone|iPod/.test(navigator.userAgent);
+            const isInStandaloneMode = window.navigator.standalone === true;
+            
+            if (isIOS && !isInStandaloneMode && !localStorage.getItem('iOSInstallShown')) {
+                setTimeout(() => {
+                    if (confirm('📱 Add Salah Tracker to your home screen for the best experience!\n\nTap the Share button, then "Add to Home Screen"')) {
+                        localStorage.setItem('iOSInstallShown', 'true');
+                    }
+                }, 3000); // Show after 3 seconds on iOS Safari
+            }
+        }
 
         // Service Worker Registration for PWA
         if ('serviceWorker' in navigator) {
@@ -1455,6 +1613,11 @@
         } else {
             init();
         }
+
+        // Initialize iOS install check
+        document.addEventListener('DOMContentLoaded', function() {
+            checkiOSInstall();
+        });
     </script>
 </body>
 </html>
