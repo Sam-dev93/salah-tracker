@@ -339,14 +339,14 @@
 
         .modal-content {
             background: #1F1F1F;
-            margin: 20% auto;
+            margin: 35% auto;
             padding: 20px;
             border: 1px solid #2E2E2E;
             border-radius: 16px;
             width: 85%;
             max-width: 350px;
             position: relative;
-            max-height: 70vh;
+            max-height: 60vh;
             overflow-y: auto;
         }
 
@@ -766,10 +766,10 @@
             </div>
             <div style="color: #E6E6E6; line-height: 1.6;">
                 <div style="margin: 20px 0; display: flex; flex-direction: column; gap: 12px;">
-                    <button onclick="exportDataAsPDF()" style="background: #10A37F; color: white; border: none; padding: 12px 16px; border-radius: 8px; font-size: 16px; font-weight: 600; cursor: pointer; transition: all 0.3s ease;">
+                    <button onclick="exportDataAsPDF()" class="option-button" style="background: #10A37F; border-color: #10A37F; color: white;">
                         📄 Export All Data
                     </button>
-                    <button onclick="clearData()" style="background: #FF4444; color: white; border: none; padding: 12px 16px; border-radius: 8px; font-size: 16px; font-weight: 600; cursor: pointer; transition: all 0.3s ease;">
+                    <button onclick="clearData()" class="option-button" style="background: #FF4444; border-color: #FF4444; color: white;">
                         🗑️ Clear All Data
                     </button>
                 </div>
@@ -793,7 +793,7 @@
         let deferredPrompt;
         let installPromptShown = false;
 
-        // Listen for the beforeinstallprompt event
+        // Listen for the beforeinstallprompt event (Android Chrome only)
         window.addEventListener('beforeinstallprompt', (e) => {
             // Prevent the mini-infobar from appearing on mobile
             e.preventDefault();
@@ -861,19 +861,7 @@
             document.getElementById('installPrompt').classList.remove('show');
         }
 
-        // Check for iOS Safari and show helpful message
-        function checkiOSInstall() {
-            const isIOS = /iPad|iPhone|iPod/.test(navigator.userAgent);
-            const isInStandaloneMode = window.navigator.standalone === true;
-            
-            if (isIOS && !isInStandaloneMode && !localStorage.getItem('iOSInstallShown')) {
-                setTimeout(() => {
-                    if (confirm('📱 Add Salah Tracker to your home screen for the best experience!\n\nTap the Share button, then "Add to Home Screen"')) {
-                        localStorage.setItem('iOSInstallShown', 'true');
-                    }
-                }, 3000); // Show after 3 seconds on iOS Safari
-            }
-        }
+
 
         // Service Worker Registration for PWA
         if ('serviceWorker' in navigator) {
@@ -1296,7 +1284,16 @@
             const prayersList = document.getElementById('dayPrayersList');
             prayersList.innerHTML = '';
             
-            prayers.forEach(prayer => {
+            // Create container with rounded corners and borders like today's prayers
+            const prayerContainer = document.createElement('div');
+            prayerContainer.style.cssText = `
+                background: #1F1F1F;
+                border-radius: 16px;
+                overflow: hidden;
+                border: 1px solid #2E2E2E;
+            `;
+            
+            prayers.forEach((prayer, index) => {
                 const status = dayData[prayer] || 'not-set';
                 const prayerName = prayer.charAt(0).toUpperCase() + prayer.slice(1);
                 
@@ -1325,6 +1322,14 @@
                     prayerItem.classList.add(statusClass);
                 }
                 
+                // Add bottom border except for last item
+                if (index < prayers.length - 1) {
+                    prayerItem.style.borderBottom = '1px solid #2E2E2E';
+                    if (statusClass) {
+                        prayerItem.style.borderBottom = '1px solid rgba(255, 255, 255, 0.1)';
+                    }
+                }
+                
                 prayerItem.innerHTML = `
                     <div class="prayer-info">
                         <div class="prayer-icon">${getPrayerIcon(prayer)}</div>
@@ -1344,9 +1349,10 @@
                     document.getElementById('prayerModal').style.display = 'block';
                 });
                 
-                prayersList.appendChild(prayerItem);
+                prayerContainer.appendChild(prayerItem);
             });
             
+            prayersList.appendChild(prayerContainer);
             document.getElementById('dayModal').style.display = 'block';
         }
 
@@ -1613,11 +1619,6 @@
         } else {
             init();
         }
-
-        // Initialize iOS install check
-        document.addEventListener('DOMContentLoaded', function() {
-            checkiOSInstall();
-        });
     </script>
 </body>
 </html>
