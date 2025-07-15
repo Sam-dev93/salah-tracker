@@ -1,1 +1,1 @@
-# Salah-tracker
+# salah-tracker
