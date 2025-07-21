@@ -7,19 +7,66 @@
     <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
     <meta name="apple-mobile-web-app-title" content="📿 Salah Tracker">
     <meta name="theme-color" content="#181818">
-    <meta name="viewport-fit" content="cover">
     <title>📿 Salah Tracker</title>
     
     <!-- PWA Icons -->
     <link rel="apple-touch-icon" sizes="180x180" href="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAALQAAAC0CAYAAAA9zQYyAAAABHNCSVQICAgIfAhkiAAAA6NJREFUeJzt3UFOwzAQBdDGKE0TGlG1qqCCyqkKZ+hJ4Aw9ASdhJSG1QKOqTdMQO2LhPyGk75k9tmfGM2NnZhwAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAWDrOzMjMzMj8/Pj4+Pj4+Pj4+Pj4+Pj4+Pj4+Pj4+Pj4+Pj4+Pj4+PhqKR8fHx8fHx8fHx8fHx8fHx8fHx8fHx8fHx8fHx8fHx8fHx8fHx+vl/Lx8fHx8fHx8fHx8fHx8fHx8fHx8fHx8fHx8fHx8fHx8fHx8fH7+X8vHx8fHx8fHx8fHx8fHx8fHx8fHx8fHx8fHx8fHx8fHx8fHx8f/1fLx8fHx8fHx8fHx8fHx8fHx8fHx8fHx8fHx8fHx8fHx8fHx8fH/+Xy8fHx8fHx8fHx8fHx8fHx8fHx8fHx8fHx8fHx8fHx8fHx8fHx8f/5fLx8fHx8fHx8fHx8fHx8fHx8fHx8fHx8fHx8fHx8fHx8fHx8fH/+Xy8fHx8fHx8fHx8fHx8fHx8fHx8fHx8fHx8fHx8fHx8fHx8fHx8f/5fLx8fHx8fHx8fHx8fHx8fHx8fHx8fHx8fHx8fHx8fHx8fHx8fH/+Xy8fHx8fHx8fHx8fHx8fHx8fHx8fHx8fHx8fHx8fHx8fHx8fHx8f/5fLx8fHx8fHx8fHx8fHx8fHx8fHx8fHx8fHx8fHx8fHx8fHx8fH/+Xy8fHx8fHx8fHx8fHx8fHx8fHx8fHx8fHx8fHx8fHx8fHx8fHx8f/5fLx8fHx8fHx8fHx8fHx8fHx8fHx8fHx8fHx8fHx8fHx8fHx8fH/+Xy8fHx8fHx8fHx8fHx8fHx8fHx8fHx8fHx8fHx8fHx8fHx8fHx8f/5fLx8fHx8fHx8fHx8fHx8fHx8fHx8fHx8fHx8fHx8fHx8fHx8fH/+Xy8fHx8fHx8fHx8fHx8fHx8fHx8fHx8fHx8fHx8fHx8fHx8fHx8f/5fLx8fHx8fHx8fHx8fHx8fHx8fHx8fHx8fHx8fHx8fHx8fHx8fH/+Xy8fHx8fHx8fHx8fHx8fHx8fHx8fHx8fHx8fHx8fHx8fHx8fHx8f/5fLx8fHx8fHx8fHx8fHx8fHx8fHx8fHx8fHx8fHx8fHx8fHx8fH/+Xy8fHx8fHx8fHx8fHx8fHx8fHx8fHx8fHx8fHx8fHx8fHx8fHx8f/5fLx8fHx8fHx8fHx8fHx8fHx8fHx8fHx8fHx8fHx8fHx8fHx8fH/+X8fAAAAADf0xhGUH3/0AAAAASUVORK5CYII=">
     <link rel="icon" href="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR42mNk+M9QDwADhgGAWjR9awAAAABJRU5ErkJggg==">
     
+    <!-- Firebase SDK v10 -->
+    <script type="module">
+        (async () => {
+            try {
+                const { initializeApp } = await import('https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js');
+                const { getAuth, signInAnonymously, onAuthStateChanged } = await import('https://www.gstatic.com/firebasejs/10.7.1/firebase-auth.js');
+                const { getFirestore, doc, setDoc, getDoc, onSnapshot, collection, getDocs } = await import('https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js');
+                
+                const firebaseConfig = {
+                    apiKey: "AIzaSyCMM5u7GiO-D5r15axueQX0Uu3sy9_W4Bg",
+                    authDomain: "salah-tracker-2af1f.firebaseapp.com",
+                    projectId: "salah-tracker-2af1f",
+                    storageBucket: "salah-tracker-2af1f.firebasestorage.app",
+                    messagingSenderId: "507734085886",
+                    appId: "1:507734085886:web:74a7c531a6db87071e95af"
+                };
+                
+                const app = initializeApp(firebaseConfig);
+                const auth = getAuth(app);
+                const db = getFirestore(app);
+                
+                window.firebase = { auth, db };
+                window.firebaseModules = {
+                    signInAnonymously,
+                    onAuthStateChanged,
+                    doc,
+                    setDoc,
+                    getDoc,
+                    onSnapshot,
+                    collection,
+                    getDocs
+                };
+                
+                window.firebaseReady = true;
+                window.updateCloudStatus('connected', '☁️ Cloud Sync Available');
+                
+                onAuthStateChanged(auth, (user) => {
+                    window.currentFirebaseUser = user;
+                    if (user && window.currentUserProfile) {
+                        window.loadCloudData();
+                    }
+                });
+                
+            } catch (error) {
+                console.warn('Firebase not available, using offline mode:', error);
+                window.firebaseError = error;
+                window.updateCloudStatus('offline', '📱 Offline Mode');
+            }
+        })();
+    </script>
+    
     <!-- PDF Generation Libraries -->
     <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf-autotable/3.5.25/jspdf.plugin.autotable.min.js"></script>
-    
-    <!-- PWA Manifest -->
-    <link rel="manifest" href="/manifest.json">
     
     <style>
         * {
@@ -50,12 +97,160 @@
             padding-top: 15px;
         }
 
+        /* Login Section */
+        .login-section {
+            margin: 60px 20px;
+            display: none;
+        }
+
+        .login-card {
+            background: #1F1F1F;
+            border-radius: 20px;
+            padding: 40px 30px;
+            border: 1px solid #2E2E2E;
+            box-shadow: 0 20px 50px rgba(0, 0, 0, 0.3);
+        }
+
+        .app-title {
+            font-size: 32px;
+            font-weight: 700;
+            margin-bottom: 8px;
+            color: #F5F5F5;
+            text-align: center;
+        }
+
+        .app-subtitle {
+            font-size: 16px;
+            color: #B8B8B8;
+            text-align: center;
+            margin-bottom: 40px;
+        }
+
+        .cloud-status {
+            text-align: center;
+            margin-bottom: 30px;
+            padding: 8px 16px;
+            border-radius: 20px;
+            font-size: 12px;
+            font-weight: 600;
+        }
+
+        .cloud-status.connected {
+            background: rgba(16, 163, 127, 0.2);
+            color: #10A37F;
+        }
+
+        .cloud-status.offline {
+            background: rgba(255, 149, 0, 0.2);
+            color: #FF9500;
+        }
+
+        .form-group {
+            margin-bottom: 20px;
+        }
+
+        .form-label {
+            display: block;
+            font-size: 14px;
+            font-weight: 600;
+            color: #B8B8B8;
+            margin-bottom: 8px;
+        }
+
+        .form-input {
+            width: 100%;
+            padding: 16px 20px;
+            border: 1px solid #3A3A3A;
+            border-radius: 12px;
+            background: #2A2A2A;
+            color: #E6E6E6;
+            font-size: 16px;
+            transition: all 0.3s ease;
+        }
+
+        .form-input:focus {
+            outline: none;
+            border-color: #10A37F;
+            background: #1F1F1F;
+        }
+
+        .login-button {
+            width: 100%;
+            padding: 16px;
+            background: #10A37F;
+            color: white;
+            border: none;
+            border-radius: 12px;
+            font-size: 16px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            margin-bottom: 20px;
+        }
+
+        .login-button:hover {
+            background: #0D7A5F;
+        }
+
+        .signup-section {
+            text-align: center;
+            padding: 20px 0;
+            border-top: 1px solid #2E2E2E;
+            margin-top: 20px;
+        }
+
+        .signup-button {
+            background: transparent;
+            color: #10A37F;
+            border: 1px solid #10A37F;
+            padding: 12px 24px;
+            border-radius: 8px;
+            font-size: 14px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+
+        .signup-button:hover {
+            background: #10A37F;
+            color: white;
+        }
+
+        .error-message {
+            background: rgba(255, 68, 68, 0.1);
+            border: 1px solid #FF4444;
+            color: #FF4444;
+            padding: 12px 16px;
+            border-radius: 8px;
+            margin-bottom: 20px;
+            font-size: 14px;
+            text-align: center;
+            display: none;
+        }
+
+        .success-message {
+            background: rgba(16, 163, 127, 0.1);
+            border: 1px solid #10A37F;
+            color: #10A37F;
+            padding: 12px 16px;
+            border-radius: 8px;
+            margin-bottom: 20px;
+            font-size: 14px;
+            text-align: center;
+            display: none;
+        }
+
+        /* Main Content */
+        .main-content {
+            display: block;
+        }
+
         .header {
             padding: 15px 20px 20px 20px;
             text-align: center;
         }
 
-        .app-title {
+        .main-title {
             font-size: 28px;
             font-weight: 700;
             margin-bottom: 12px;
@@ -67,6 +262,18 @@
             font-weight: 600;
             color: #B8B8B8;
         }
+
+        .user-info {
+            margin-top: 15px;
+            padding: 12px 16px;
+            background: rgba(16, 163, 127, 0.1);
+            border-radius: 12px;
+            color: #E6E6E6;
+            font-size: 14px;
+            font-weight: 600;
+        }
+
+
 
         .stats-container {
             display: flex;
@@ -94,7 +301,7 @@
         }
 
         .stat-card.qadha {
-            border-color: #FF8C00;
+            border-color: #6366F1;
         }
 
         .stat-number {
@@ -108,7 +315,7 @@
         }
 
         .stat-card.qadha .stat-number {
-            color: #FF8C00;
+            color: #6366F1;
         }
 
         .stat-label {
@@ -168,7 +375,7 @@
         }
 
         .prayer-row.qadha {
-            background: linear-gradient(135deg, #FF8C00, #E67300);
+            background: linear-gradient(135deg, #6366F1, #4F46E5);
             color: white;
             border-bottom: 1px solid rgba(255, 255, 255, 0.1);
         }
@@ -331,10 +538,10 @@
         }
 
         .indicator.qadha {
-            background: #FF8C00;
+            background: #6366F1;
         }
 
-        /* Modal Styles */
+        /* Modal styles */
         .modal {
             display: none;
             position: fixed;
@@ -349,7 +556,7 @@
 
         .modal-content {
             background: #1F1F1F;
-            margin: 50% auto;
+            margin: 35% auto;
             padding: 20px;
             border: 1px solid #2E2E2E;
             border-radius: 16px;
@@ -425,8 +632,8 @@
         }
 
         .option-button.qadha {
-            background: #FF8C00;
-            border-color: #FF8C00;
+            background: #6366F1;
+            border-color: #6366F1;
             color: white;
         }
 
@@ -447,7 +654,7 @@
         }
 
         .qadha-button {
-            background: #FF8C00;
+            background: #6366F1;
             color: white;
             border: none;
             padding: 4px 8px;
@@ -458,7 +665,7 @@
         }
 
         .qadha-button:hover {
-            background: #E67300;
+            background: #4F46E5;
         }
 
         .footer {
@@ -469,38 +676,6 @@
             border-top: 1px solid #2E2E2E;
             margin-top: 20px;
             margin-bottom: env(safe-area-inset-bottom);
-        }
-
-        .user-setup {
-            margin-top: 10px;
-            display: none;
-        }
-
-        .user-input {
-            background: #2A2A2A;
-            color: #E6E6E6;
-            border: 1px solid #3A3A3A;
-            padding: 8px 12px;
-            border-radius: 6px;
-            font-size: 14px;
-            margin-right: 8px;
-            width: 200px;
-        }
-
-        .user-button {
-            background: #10A37F;
-            color: white;
-            border: none;
-            padding: 8px 12px;
-            border-radius: 6px;
-            font-size: 14px;
-            cursor: pointer;
-        }
-
-        .user-display {
-            margin-top: 8px;
-            color: #B8B8B8;
-            font-size: 14px;
         }
 
         .data-management-button {
@@ -520,14 +695,28 @@
             color: #E6E6E6;
         }
 
-        .reset-button {
+        .logout-button {
             background: #FF4444;
-            border-color: #FF4444;
             color: white;
+            border: none;
+            padding: 12px 24px;
+            border-radius: 8px;
+            font-size: 14px;
+            font-weight: 600;
+            cursor: pointer;
+            margin: 16px auto;
+            display: block;
         }
 
-        .reset-button:hover {
+        .logout-button:hover {
             background: #CC3333;
+        }
+
+        /* Signup Modal */
+        .signup-form {
+            display: flex;
+            flex-direction: column;
+            gap: 20px;
         }
 
         /* Install prompt styles */
@@ -591,27 +780,6 @@
             }
         }
 
-        /* PWA specific styles */
-        @media (display-mode: fullscreen) {
-            body {
-                padding-top: env(safe-area-inset-top);
-            }
-            
-            .container {
-                padding-top: 40px;
-            }
-        }
-
-        @media (display-mode: standalone) {
-            body {
-                padding-top: env(safe-area-inset-top);
-            }
-            
-            .container {
-                padding-top: 40px;
-            }
-        }
-
         /* PDF specific button styling */
         .pdf-export-button {
             background: linear-gradient(135deg, #10A37F, #0D8B6F);
@@ -654,106 +822,152 @@
             0% { transform: rotate(0deg); }
             100% { transform: rotate(360deg); }
         }
+
+        /* PWA specific styles */
+        @media (display-mode: fullscreen) {
+            body {
+                padding-top: env(safe-area-inset-top);
+            }
+            
+            .container {
+                padding-top: 40px;
+            }
+        }
+
+        @media (display-mode: standalone) {
+            body {
+                padding-top: env(safe-area-inset-top);
+            }
+            
+            .container {
+                padding-top: 40px;
+            }
+        }
     </style>
 </head>
 <body>
     <div class="container">
-        <div class="header">
-            <h1 class="app-title">📿 Salah Tracker</h1>
-            <div class="current-date" id="currentDate">Tuesday, July 15, 2025</div>
-            <div class="user-setup" id="userSection">
-                <input type="text" id="userNameInput" placeholder="Enter your name" class="user-input">
-                <button onclick="setUserName()" class="user-button">Set</button>
-            </div>
-            <div class="user-display" id="currentUserDisplay"></div>
-        </div>
-
-        <div class="stats-container">
-            <div class="stat-card missed" onclick="openStatsModal('missed')">
-                <div class="stat-number" id="missedCount">0</div>
-                <div class="stat-label">Missed</div>
-            </div>
-            <div class="stat-card qadha" onclick="openStatsModal('qadha')">
-                <div class="stat-number" id="qadhaCount">0</div>
-                <div class="stat-label">Qadha</div>
-            </div>
-        </div>
-
-        <div class="today-prayers">
-            <h2 class="section-title">Today's Salah</h2>
-            <div class="prayer-times" id="todayPrayers">
-                <div class="prayer-row" data-prayer="fajr" onclick="openPrayerModal('fajr', 'Fajr')">
-                    <div class="prayer-info">
-                        <div class="prayer-icon">🌅</div>
-                        <div class="prayer-details">
-                            <h4>Fajr</h4>
-                            <p></p>
-                        </div>
-                    </div>
-                    <div class="prayer-status">Not Set</div>
+        <!-- Login Section -->
+        <div class="login-section" id="loginSection">
+            <div class="login-card">
+                <h1 class="app-title">📿 Salah Tracker</h1>
+                <p class="app-subtitle">Track your daily prayers with cloud sync</p>
+                
+                <div class="cloud-status offline" id="cloudStatus">📱 Loading...</div>
+                
+                <div class="error-message" id="errorMessage"></div>
+                <div class="success-message" id="successMessage"></div>
+                
+                <div class="form-group">
+                    <label class="form-label">Access Code</label>
+                    <input type="password" class="form-input" id="accessCode" placeholder="Enter your access code">
                 </div>
-                <div class="prayer-row" data-prayer="zuhr" onclick="openPrayerModal('zuhr', 'Zuhr')">
-                    <div class="prayer-info">
-                        <div class="prayer-icon">☀️</div>
-                        <div class="prayer-details">
-                            <h4>Zuhr</h4>
-                            <p></p>
-                        </div>
-                    </div>
-                    <div class="prayer-status">Not Set</div>
-                </div>
-                <div class="prayer-row" data-prayer="asr" onclick="openPrayerModal('asr', 'Asr')">
-                    <div class="prayer-info">
-                        <div class="prayer-icon">🌤️</div>
-                        <div class="prayer-details">
-                            <h4>Asr</h4>
-                            <p></p>
-                        </div>
-                    </div>
-                    <div class="prayer-status">Not Set</div>
-                </div>
-                <div class="prayer-row" data-prayer="maghrib" onclick="openPrayerModal('maghrib', 'Maghrib')">
-                    <div class="prayer-info">
-                        <div class="prayer-icon">🌆</div>
-                        <div class="prayer-details">
-                            <h4>Maghrib</h4>
-                            <p></p>
-                        </div>
-                    </div>
-                    <div class="prayer-status">Not Set</div>
-                </div>
-                <div class="prayer-row" data-prayer="isha" onclick="openPrayerModal('isha', 'Isha')">
-                    <div class="prayer-info">
-                        <div class="prayer-icon">🌙</div>
-                        <div class="prayer-details">
-                            <h4>Isha</h4>
-                            <p></p>
-                        </div>
-                    </div>
-                    <div class="prayer-status">Not Set</div>
+                
+                <button class="login-button" onclick="login()">Login</button>
+                
+                <div class="signup-section">
+                    <p style="color: #B8B8B8; margin-bottom: 12px;">Don't have an access code?</p>
+                    <button class="signup-button" onclick="showSignupModal()">Create New Profile</button>
                 </div>
             </div>
         </div>
 
-        <div class="monthly-view">
-            <div class="month-navigation">
-                <button class="nav-arrow" id="prevMonth" onclick="changeMonth(-1)">‹</button>
-                <h3 class="month-title" id="monthTitle">July 2025</h3>
-                <button class="nav-arrow" id="nextMonth" onclick="changeMonth(1)">›</button>
+        <!-- Main Content -->
+        <div class="main-content" id="mainContent">
+            <div class="header">
+                <h1 class="main-title">📿 Salah Tracker</h1>
+                <div class="current-date" id="currentDate">Tuesday, July 21, 2025</div>
+                <div class="user-info" id="userInfo"></div>
             </div>
-            <div class="calendar-container">
-                <div class="calendar-grid" id="calendarGrid">
-                    <!-- Calendar will be generated here -->
+
+            <div class="stats-container">
+                <div class="stat-card missed" onclick="openStatsModal('missed')">
+                    <div class="stat-number" id="missedCount">0</div>
+                    <div class="stat-label">Missed</div>
+                </div>
+                <div class="stat-card qadha" onclick="openStatsModal('qadha')">
+                    <div class="stat-number" id="qadhaCount">0</div>
+                    <div class="stat-label">Qadha</div>
                 </div>
             </div>
-        </div>
 
-        <div class="footer">
-            Track your daily salah and make up missed ones
-            <br>
-            <button onclick="showDataInfo()" class="data-management-button">
-                Data Management
-            </button>
+            <div class="today-prayers">
+                <h2 class="section-title">Today's Salah</h2>
+                <div class="prayer-times" id="todayPrayers">
+                    <div class="prayer-row" data-prayer="fajr" onclick="openPrayerModal('fajr', 'Fajr')">
+                        <div class="prayer-info">
+                            <div class="prayer-icon">🌅</div>
+                            <div class="prayer-details">
+                                <h4>Fajr</h4>
+                                <p></p>
+                            </div>
+                        </div>
+                        <div class="prayer-status">Not Set</div>
+                    </div>
+                    <div class="prayer-row" data-prayer="zuhr" onclick="openPrayerModal('zuhr', 'Zuhr')">
+                        <div class="prayer-info">
+                            <div class="prayer-icon">☀️</div>
+                            <div class="prayer-details">
+                                <h4>Zuhr</h4>
+                                <p></p>
+                            </div>
+                        </div>
+                        <div class="prayer-status">Not Set</div>
+                    </div>
+                    <div class="prayer-row" data-prayer="asr" onclick="openPrayerModal('asr', 'Asr')">
+                        <div class="prayer-info">
+                            <div class="prayer-icon">🌤️</div>
+                            <div class="prayer-details">
+                                <h4>Asr</h4>
+                                <p></p>
+                            </div>
+                        </div>
+                        <div class="prayer-status">Not Set</div>
+                    </div>
+                    <div class="prayer-row" data-prayer="maghrib" onclick="openPrayerModal('maghrib', 'Maghrib')">
+                        <div class="prayer-info">
+                            <div class="prayer-icon">🌆</div>
+                            <div class="prayer-details">
+                                <h4>Maghrib</h4>
+                                <p></p>
+                            </div>
+                        </div>
+                        <div class="prayer-status">Not Set</div>
+                    </div>
+                    <div class="prayer-row" data-prayer="isha" onclick="openPrayerModal('isha', 'Isha')">
+                        <div class="prayer-info">
+                            <div class="prayer-icon">🌙</div>
+                            <div class="prayer-details">
+                                <h4>Isha</h4>
+                                <p></p>
+                            </div>
+                        </div>
+                        <div class="prayer-status">Not Set</div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="monthly-view">
+                <div class="month-navigation">
+                    <button class="nav-arrow" id="prevMonth" onclick="changeMonth(-1)">‹</button>
+                    <h3 class="month-title" id="monthTitle">July 2025</h3>
+                    <button class="nav-arrow" id="nextMonth" onclick="changeMonth(1)">›</button>
+                </div>
+                <div class="calendar-container">
+                    <div class="calendar-grid" id="calendarGrid">
+                        <!-- Calendar will be generated here -->
+                    </div>
+                </div>
+            </div>
+
+            <div class="footer">
+                Track your daily salah and make up missed ones
+                <br>
+                <button onclick="showDataInfo()" class="data-management-button">
+                    Data Management
+                </button>
+                <button onclick="logout()" class="logout-button">Logout</button>
+            </div>
         </div>
     </div>
 
@@ -821,7 +1035,7 @@
                 <div style="margin: 20px 0; display: flex; flex-direction: column; gap: 12px;">
                     <button onclick="exportDataAsPDF()" class="pdf-export-button" id="pdfExportBtn">
                         <div class="loading-spinner" id="pdfSpinner"></div>
-                        <span id="pdfBtnText">Export as PDF Report</span>
+                        <span id="pdfBtnText">📄 Export as PDF Report</span>
                     </button>
                     <button onclick="clearData()" class="option-button" style="background: #FF4444; border-color: #FF4444; color: white;">
                         🗑️ Clear All Data
@@ -831,14 +1045,39 @@
         </div>
     </div>
 
+    <!-- Signup Modal -->
+    <div id="signupModal" class="modal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h2 class="modal-title">Create New Profile</h2>
+                <span class="close" onclick="closeModal('signupModal')">&times;</span>
+            </div>
+            <div class="signup-form">
+                <div class="form-group">
+                    <label class="form-label">Name</label>
+                    <input type="text" class="form-input" id="signupName" placeholder="Enter your name">
+                </div>
+                <div class="form-group">
+                    <label class="form-label">Access Code</label>
+                    <input type="text" class="form-input" id="signupCode" placeholder="Create an access code">
+                </div>
+                <button class="login-button" onclick="createProfile()">Create Profile</button>
+            </div>
+        </div>
+    </div>
+
     <script>
-        // Data storage with secure user management
+        // Global variables
         let currentUser = null;
+        let currentUserProfile = null;
+        let currentFirebaseUser = null;
         let prayerData = {};
         let currentDisplayMonth = new Date().getMonth() + 1;
         let currentDisplayYear = new Date().getFullYear();
         let currentPrayer = null;
         let currentDate = null;
+        let dataListener = null;
+        let isOfflineMode = false;
 
         const prayers = ['fajr', 'zuhr', 'asr', 'maghrib', 'isha'];
         const prayerNames = ['Fajr', 'Zuhr', 'Asr', 'Maghrib', 'Isha'];
@@ -847,78 +1086,38 @@
         let deferredPrompt;
         let installPromptShown = false;
 
-        // Listen for the beforeinstallprompt event (Android Chrome only)
+        // Make functions available globally
+        window.updateCloudStatus = function(status, message) {
+            const cloudStatus = document.getElementById('cloudStatus');
+            if (cloudStatus) {
+                cloudStatus.className = `cloud-status ${status}`;
+                cloudStatus.textContent = message;
+            }
+        };
+
+        window.currentUserProfile = null;
+        window.loadCloudData = loadCloudData;
+
+        // PWA functionality
         window.addEventListener('beforeinstallprompt', (e) => {
-            // Prevent the mini-infobar from appearing on mobile
             e.preventDefault();
-            // Store the event so it can be triggered later
             deferredPrompt = e;
             
-            // Show custom install prompt after user has used the app a bit
             setTimeout(() => {
                 if (!installPromptShown && !localStorage.getItem('installPromptDismissed')) {
                     showInstallPrompt();
                 }
-            }, 3000); // Show after 3 seconds of use
+            }, 3000);
         });
 
-        // Check if app is already installed
         window.addEventListener('appinstalled', () => {
-            console.log('PWA was installed');
             hideInstallPrompt();
             localStorage.setItem('installPromptDismissed', 'true');
         });
 
-        function showInstallPrompt() {
-            // Don't show if already in standalone mode (already installed)
-            if (window.matchMedia('(display-mode: standalone)').matches) {
-                return;
-            }
-            
-            installPromptShown = true;
-            document.getElementById('installPrompt').classList.add('show');
-        }
-
-        function installApp() {
-            if (deferredPrompt) {
-                // Show the install prompt
-                deferredPrompt.prompt();
-                
-                // Wait for the user to respond to the prompt
-                deferredPrompt.userChoice.then((choiceResult) => {
-                    if (choiceResult.outcome === 'accepted') {
-                        console.log('User accepted the install prompt');
-                    } else {
-                        console.log('User dismissed the install prompt');
-                    }
-                    deferredPrompt = null;
-                });
-            } else {
-                // Fallback for browsers that don't support the install prompt
-                // Show instructions for manual installation
-                if (navigator.userAgent.includes('iPhone') || navigator.userAgent.includes('iPad')) {
-                    alert('To install:\n1. Tap the Share button\n2. Select "Add to Home Screen"');
-                } else {
-                    alert('To install:\nLook for the "Install" button in your browser\'s address bar');
-                }
-            }
-            
-            hideInstallPrompt();
-        }
-
-        function dismissInstall() {
-            hideInstallPrompt();
-            localStorage.setItem('installPromptDismissed', 'true');
-        }
-
-        function hideInstallPrompt() {
-            document.getElementById('installPrompt').classList.remove('show');
-        }
-
-        // Service Worker Registration for PWA
+        // Service Worker Registration
         if ('serviceWorker' in navigator) {
             window.addEventListener('load', function() {
-                // Create inline service worker
                 const swCode = `
                     const CACHE_NAME = 'salah-tracker-v1';
                     const urlsToCache = [
@@ -961,53 +1160,53 @@
             });
         }
 
-        // User management functions
-        function generateUserKey(name) {
-            let hash = 0;
-            for (let i = 0; i < name.length; i++) {
-                const char = name.charCodeAt(i);
-                hash = ((hash << 5) - hash) + char;
-                hash = hash & hash;
-            }
-            return `salah_${Math.abs(hash)}_${name.toLowerCase().replace(/[^a-z0-9]/g, '')}`;
-        }
-
-        function setUserName() {
-            const nameInput = document.getElementById('userNameInput');
-            const name = nameInput.value.trim();
-            
-            if (name.length < 2) {
-                alert('Please enter a name with at least 2 characters');
+        function showInstallPrompt() {
+            if (window.matchMedia('(display-mode: standalone)').matches) {
                 return;
             }
             
-            currentUser = generateUserKey(name);
-            
-            // Store user info in memory during session only
-            const userData = { name: name, key: currentUser };
-            sessionStorage.setItem('currentSalahUser', JSON.stringify(userData));
-            
-            loadUserData();
-            updateUserDisplay();
-            document.getElementById('userSection').style.display = 'none';
-            updateTodaysPrayers();
-            updateStats();
-            generateCalendar();
+            installPromptShown = true;
+            document.getElementById('installPrompt').classList.add('show');
         }
 
-        function loadUserData() {
-            if (currentUser) {
-                const stored = localStorage.getItem(`salahTracker_${currentUser}`);
-                prayerData = stored ? JSON.parse(stored) : {};
+        function installApp() {
+            if (deferredPrompt) {
+                deferredPrompt.prompt();
+                
+                deferredPrompt.userChoice.then((choiceResult) => {
+                    if (choiceResult.outcome === 'accepted') {
+                        console.log('User accepted the install prompt');
+                    } else {
+                        console.log('User dismissed the install prompt');
+                    }
+                    deferredPrompt = null;
+                });
+            } else {
+                if (navigator.userAgent.includes('iPhone') || navigator.userAgent.includes('iPad')) {
+                    alert('To install:\n1. Tap the Share button\n2. Select "Add to Home Screen"');
+                } else {
+                    alert('To install:\nLook for the "Install" button in your browser\'s address bar');
+                }
             }
+            
+            hideInstallPrompt();
         }
 
+        function dismissInstall() {
+            hideInstallPrompt();
+            localStorage.setItem('installPromptDismissed', 'true');
+        }
+
+        function hideInstallPrompt() {
+            document.getElementById('installPrompt').classList.remove('show');
+        }
+
+        // User management functions
         function updateUserDisplay() {
-            const display = document.getElementById('currentUserDisplay');
+            const display = document.getElementById('userInfo');
             
-            if (currentUser) {
-                const userData = JSON.parse(sessionStorage.getItem('currentSalahUser') || '{}');
-                const userName = userData.name || 'User';
+            if (currentUserProfile) {
+                const userName = currentUserProfile.name || 'User';
                 display.textContent = `📱 ${userName}'s Salah Tracker`;
                 display.style.display = 'block';
             } else {
@@ -1015,29 +1214,271 @@
             }
         }
 
-        function checkUserSetup() {
-            const userData = sessionStorage.getItem('currentSalahUser');
-            if (!userData) {
-                document.getElementById('userSection').style.display = 'block';
-                return false;
+        // Login/Signup functions
+        async function login() {
+            const accessCode = document.getElementById('accessCode').value.trim();
+            
+            if (!accessCode) {
+                showError('Please enter an access code');
+                return;
             }
             
-            const user = JSON.parse(userData);
-            currentUser = user.key;
-            return true;
+            try {
+                // Check if Firebase is available
+                if (window.firebaseReady && window.firebase && window.firebaseModules) {
+                    await loginWithFirebase(accessCode);
+                } else {
+                    await loginOffline(accessCode);
+                }
+            } catch (error) {
+                console.error('Login error:', error);
+                showError('Login failed: ' + error.message);
+            }
+        }
+
+        async function loginWithFirebase(accessCode) {
+            const { signInAnonymously } = window.firebaseModules;
+            const { auth } = window.firebase;
+            
+            const userCredential = await signInAnonymously(auth);
+            currentFirebaseUser = userCredential.user;
+            
+            const profiles = await checkProfiles(accessCode);
+            
+            if (!profiles || !profiles[accessCode]) {
+                showError('Invalid access code');
+                await auth.signOut();
+                return;
+            }
+            
+            currentUserProfile = {
+                accessCode: accessCode,
+                name: profiles[accessCode].name
+            };
+            
+            showMainApp();
+            window.updateCloudStatus('connected', '☁️ Cloud Sync Active');
+        }
+
+        async function loginOffline(accessCode) {
+            const offlineProfiles = JSON.parse(localStorage.getItem('offlineProfiles') || '{}');
+            const defaultProfiles = {
+                '190694': { name: 'Masum' },
+                'P455word': { name: 'Sam' }
+            };
+            
+            const allProfiles = { ...defaultProfiles, ...offlineProfiles };
+            
+            if (allProfiles[accessCode]) {
+                currentUserProfile = {
+                    accessCode: accessCode,
+                    name: allProfiles[accessCode].name
+                };
+                
+                showMainApp();
+                window.updateCloudStatus('offline', '📱 Offline Mode');
+            } else {
+                showError('Invalid access code');
+            }
+        }
+
+        async function checkProfiles(accessCode) {
+            try {
+                const { doc, getDoc, setDoc } = window.firebaseModules;
+                const { db } = window.firebase;
+                
+                const profilesDoc = await getDoc(doc(db, 'config', 'profiles'));
+                
+                if (!profilesDoc.exists()) {
+                    const defaultProfiles = {
+                        '190694': { name: 'Masum', created: new Date().toISOString() },
+                        'P455word': { name: 'Sam', created: new Date().toISOString() }
+                    };
+                    
+                    await setDoc(doc(db, 'config', 'profiles'), {
+                        profiles: defaultProfiles,
+                        lastUpdated: new Date().toISOString()
+                    });
+                    
+                    return defaultProfiles;
+                }
+                
+                return profilesDoc.data().profiles || {};
+            } catch (error) {
+                console.error('Error checking profiles:', error);
+                throw error;
+            }
+        }
+
+        function showSignupModal() {
+            document.getElementById('signupModal').style.display = 'block';
+            document.getElementById('signupName').value = '';
+            document.getElementById('signupCode').value = '';
+        }
+
+        async function createProfile() {
+            const name = document.getElementById('signupName').value.trim();
+            const accessCode = document.getElementById('signupCode').value.trim();
+            
+            if (!name || !accessCode) {
+                showError('Please fill in all fields');
+                return;
+            }
+            
+            if (accessCode.length < 6) {
+                showError('Access code must be at least 6 characters');
+                return;
+            }
+            
+            try {
+                if (window.firebaseReady && window.firebase && window.firebaseModules) {
+                    await createProfileWithFirebase(name, accessCode);
+                } else {
+                    await createProfileOffline(name, accessCode);
+                }
+            } catch (error) {
+                console.error('Error creating profile:', error);
+                showError('Failed to create profile: ' + error.message);
+            }
+        }
+
+        async function createProfileWithFirebase(name, accessCode) {
+            const { signInAnonymously } = window.firebaseModules;
+            const { auth } = window.firebase;
+            
+            if (!currentFirebaseUser) {
+                await signInAnonymously(auth);
+            }
+            
+            const { doc, getDoc, setDoc } = window.firebaseModules;
+            const { db } = window.firebase;
+            
+            const profilesDoc = await getDoc(doc(db, 'config', 'profiles'));
+            const existingProfiles = profilesDoc.exists() ? profilesDoc.data().profiles || {} : {};
+            
+            if (existingProfiles[accessCode]) {
+                showError('Access code already exists. Please choose a different one.');
+                return;
+            }
+            
+            existingProfiles[accessCode] = {
+                name: name,
+                created: new Date().toISOString()
+            };
+            
+            await setDoc(doc(db, 'config', 'profiles'), {
+                profiles: existingProfiles,
+                lastUpdated: new Date().toISOString()
+            });
+            
+            closeModal('signupModal');
+            showSuccess(`Profile created! Your access code is: ${accessCode}`);
+        }
+
+        async function createProfileOffline(name, accessCode) {
+            const offlineProfiles = JSON.parse(localStorage.getItem('offlineProfiles') || '{}');
+            
+            if (offlineProfiles[accessCode]) {
+                showError('Access code already exists. Please choose a different one.');
+                return;
+            }
+            
+            offlineProfiles[accessCode] = {
+                name: name,
+                created: new Date().toISOString()
+            };
+            
+            localStorage.setItem('offlineProfiles', JSON.stringify(offlineProfiles));
+            closeModal('signupModal');
+            showSuccess(`Profile created! Your access code is: ${accessCode} (offline mode)`);
+        }
+
+        function showMainApp() {
+            document.getElementById('loginSection').style.display = 'none';
+            document.getElementById('mainContent').style.display = 'block';
+            
+            updateUserDisplay();
+            loadUserData();
+            updateTodaysPrayers();
+            updateStats();
+            generateCalendar();
+        }
+
+        async function loadUserData() {
+            if (!currentUserProfile) return;
+            
+            // Always load from localStorage first
+            prayerData = JSON.parse(localStorage.getItem(`salahTracker_${currentUserProfile.accessCode}`) || '{}');
+            
+            // If Firebase is available, try to sync
+            if (window.firebaseReady && window.firebase && window.firebaseModules && currentFirebaseUser) {
+                await loadCloudData();
+            }
+            
+            updateTodaysPrayers();
+            updateStats();
+            generateCalendar();
+        }
+
+        async function loadCloudData() {
+            if (!currentUserProfile || !window.firebase || !window.firebaseModules) return;
+            
+            try {
+                const { doc, onSnapshot } = window.firebaseModules;
+                const { db } = window.firebase;
+                
+                if (dataListener) {
+                    dataListener();
+                }
+                
+                dataListener = onSnapshot(doc(db, 'prayerData', currentUserProfile.accessCode), (doc) => {
+                    if (doc.exists()) {
+                        const cloudData = doc.data() || {};
+                        // Merge cloud data with local data
+                        prayerData = { ...prayerData, ...cloudData };
+                        
+                        // Save merged data to localStorage
+                        localStorage.setItem(`salahTracker_${currentUserProfile.accessCode}`, JSON.stringify(prayerData));
+                    }
+                    updateTodaysPrayers();
+                    updateStats();
+                    generateCalendar();
+                }, (error) => {
+                    console.error('Error listening to cloud data:', error);
+                });
+                
+            } catch (error) {
+                console.error('Error loading cloud data:', error);
+            }
+        }
+
+        async function saveUserData() {
+            if (!currentUserProfile) return;
+            
+            // Always save to localStorage
+            localStorage.setItem(`salahTracker_${currentUserProfile.accessCode}`, JSON.stringify(prayerData));
+            
+            // If Firebase is available, also save to cloud
+            if (window.firebaseReady && window.firebase && window.firebaseModules && currentFirebaseUser) {
+                try {
+                    const { doc, setDoc } = window.firebaseModules;
+                    const { db } = window.firebase;
+                    
+                    await setDoc(doc(db, 'prayerData', currentUserProfile.accessCode), prayerData);
+                } catch (error) {
+                    console.error('Error saving to cloud:', error);
+                    // Continue using localStorage, don't block the operation
+                }
+            }
         }
 
         // Initialize app
         function init() {
             updateCurrentDate();
             
-            if (checkUserSetup()) {
-                loadUserData();
-                updateUserDisplay();
-                updateTodaysPrayers();
-                updateStats();
-                generateCalendar();
-            }
+            // Always show login screen first
+            document.getElementById('loginSection').style.display = 'block';
+            document.getElementById('mainContent').style.display = 'none';
         }
 
         function updateCurrentDate() {
@@ -1048,7 +1489,10 @@
                 day: 'numeric',
                 year: 'numeric'
             });
-            document.getElementById('currentDate').textContent = dateStr;
+            const dateElement = document.getElementById('currentDate');
+            if (dateElement) {
+                dateElement.textContent = dateStr;
+            }
         }
 
         function getDateKey(date = new Date()) {
@@ -1061,6 +1505,8 @@
 
             prayers.forEach(prayer => {
                 const row = document.querySelector(`[data-prayer="${prayer}"]`);
+                if (!row) return;
+                
                 const status = todayData[prayer] || 'not-set';
                 const statusElement = row.querySelector('.prayer-status');
 
@@ -1096,8 +1542,11 @@
                 });
             });
 
-            document.getElementById('missedCount').textContent = missedCount;
-            document.getElementById('qadhaCount').textContent = qadhaCount;
+            const missedEl = document.getElementById('missedCount');
+            const qadhaEl = document.getElementById('qadhaCount');
+            
+            if (missedEl) missedEl.textContent = missedCount;
+            if (qadhaEl) qadhaEl.textContent = qadhaCount;
         }
 
         function openPrayerModal(prayer, prayerName) {
@@ -1107,7 +1556,7 @@
             document.getElementById('prayerModal').style.display = 'block';
         }
 
-        function setPrayerStatus(status) {
+        async function setPrayerStatus(status) {
             if (!currentPrayer) return;
 
             const dateKey = currentDate || getDateKey();
@@ -1117,7 +1566,8 @@
             }
 
             prayerData[dateKey][currentPrayer] = status;
-            saveData();
+            
+            await saveUserData();
             updateTodaysPrayers();
             updateStats();
             generateCalendar();
@@ -1131,7 +1581,7 @@
             }
         }
 
-        function clearPrayerStatus() {
+        async function clearPrayerStatus() {
             if (!currentPrayer) return;
 
             const dateKey = currentDate || getDateKey();
@@ -1139,12 +1589,11 @@
             if (prayerData[dateKey] && prayerData[dateKey][currentPrayer]) {
                 delete prayerData[dateKey][currentPrayer];
                 
-                // If the day has no more prayers, remove the entire day entry
                 if (Object.keys(prayerData[dateKey]).length === 0) {
                     delete prayerData[dateKey];
                 }
                 
-                saveData();
+                await saveUserData();
                 updateTodaysPrayers();
                 updateStats();
                 generateCalendar();
@@ -1178,15 +1627,11 @@
             if (filteredPrayers.length === 0) {
                 modalContent.innerHTML = '<div style="text-align: center; color: #B8B8B8; padding: 20px;">No salah found</div>';
             } else {
-                // Sort by date first, then by prayer order within each date
                 const prayerOrder = { fajr: 0, zuhr: 1, asr: 2, maghrib: 3, isha: 4 };
                 
                 filteredPrayers.sort((a, b) => {
-                    // First sort by date (ascending - oldest first)
                     const dateCompare = new Date(a.date) - new Date(b.date);
                     if (dateCompare !== 0) return dateCompare;
-                    
-                    // Then sort by prayer order within the same date
                     return prayerOrder[a.prayer] - prayerOrder[b.prayer];
                 });
 
@@ -1208,7 +1653,7 @@
                     } else {
                         item.innerHTML = `
                             <span>${dateStr} - ${prayer.charAt(0).toUpperCase() + prayer.slice(1)}</span>
-                            <span style="color: #FF8C00;">Completed</span>
+                            <span style="color: #6366F1;">Completed</span>
                         `;
                     }
                     
@@ -1219,7 +1664,7 @@
             document.getElementById('statsModal').style.display = 'block';
         }
 
-        function makeQadha(date, prayer) {
+        async function makeQadha(date, prayer) {
             if (prayerData[date] && prayerData[date][prayer] === 'missed') {
                 const prayerName = prayer.charAt(0).toUpperCase() + prayer.slice(1);
                 const dateObj = new Date(date);
@@ -1230,7 +1675,7 @@
                 
                 if (confirm(`🤲 Qadha Confirmation\n\nAre you sure you prayed the ${prayerName} salah that you missed on ${dateStr}?\n\nThis will mark it as Qadha.`)) {
                     prayerData[date][prayer] = 'qadha';
-                    saveData();
+                    await saveUserData();
                     updateStats();
                     updateTodaysPrayers();
                     generateCalendar();
@@ -1243,6 +1688,8 @@
         function generateCalendar() {
             const grid = document.getElementById('calendarGrid');
             const monthTitle = document.getElementById('monthTitle');
+            
+            if (!grid || !monthTitle) return;
             
             const monthNames = ['January', 'February', 'March', 'April', 'May', 'June',
                               'July', 'August', 'September', 'October', 'November', 'December'];
@@ -1336,7 +1783,6 @@
             const prayersList = document.getElementById('dayPrayersList');
             prayersList.innerHTML = '';
             
-            // Create container with rounded corners and borders like today's prayers
             const prayerContainer = document.createElement('div');
             prayerContainer.style.cssText = `
                 background: #1F1F1F;
@@ -1374,7 +1820,6 @@
                     prayerItem.classList.add(statusClass);
                 }
                 
-                // Add bottom border except for last item
                 if (index < prayers.length - 1) {
                     prayerItem.style.borderBottom = '1px solid #2E2E2E';
                     if (statusClass) {
@@ -1434,12 +1879,9 @@
         }
 
         function closeModal(modalId) {
-            document.getElementById(modalId).style.display = 'none';
-        }
-
-        function saveData() {
-            if (currentUser) {
-                localStorage.setItem(`salahTracker_${currentUser}`, JSON.stringify(prayerData));
+            const modal = document.getElementById(modalId);
+            if (modal) {
+                modal.style.display = 'none';
             }
         }
 
@@ -1448,8 +1890,6 @@
         }
 
         function exportDataAsPDF() {
-            console.log('Export PDF button clicked');
-            
             const btn = document.getElementById('pdfExportBtn');
             const btnText = document.getElementById('pdfBtnText');
             const spinner = document.getElementById('pdfSpinner');
@@ -1460,22 +1900,17 @@
             btn.disabled = true;
 
             try {
-                // Check if jsPDF is loaded
                 if (typeof window.jspdf === 'undefined') {
                     alert('PDF library not loaded. Please refresh the page and try again.');
                     resetPdfButton();
                     return;
                 }
 
-                console.log('jsPDF library loaded successfully');
-
                 const { jsPDF } = window.jspdf;
                 const doc = new jsPDF();
                 
-                // Get user data
-                const userData = JSON.parse(sessionStorage.getItem('currentSalahUser') || '{}');
-                const userName = userData.name || 'User';
-                const currentDate = new Date().toLocaleDateString('en-US', {
+                const userName = currentUserProfile?.name || 'User';
+                const currentDateStr = new Date().toLocaleDateString('en-US', {
                     weekday: 'long',
                     year: 'numeric',
                     month: 'long',
@@ -1491,7 +1926,7 @@
                 const dailyRecords = [];
 
                 Object.entries(prayerData).forEach(([date, dayData]) => {
-                    const month = date.substring(0, 7); // YYYY-MM
+                    const month = date.substring(0, 7);
                     if (!monthlyStats[month]) {
                         monthlyStats[month] = { prayed: 0, missed: 0, qadha: 0 };
                     }
@@ -1522,12 +1957,9 @@
                     }
                 });
 
-                console.log('Statistics calculated, generating PDF...');
-
-                // Generate PDF content
                 generateSalahPDF(doc, {
                     userName,
-                    currentDate,
+                    currentDate: currentDateStr,
                     totalSalah,
                     prayedCount,
                     missedCount,
@@ -1536,13 +1968,9 @@
                     dailyRecords
                 });
                 
-                // Save the PDF
                 const fileName = `salah_report_${userName.toLowerCase().replace(/\s+/g, '_')}_${new Date().toISOString().split('T')[0]}.pdf`;
                 doc.save(fileName);
                 
-                console.log('PDF generated successfully');
-                
-                // Show success message
                 setTimeout(() => {
                     alert('📄 PDF report generated successfully!');
                 }, 500);
@@ -1563,27 +1991,13 @@
         }
 
         function generateSalahPDF(doc, data) {
-            console.log('Starting PDF generation with data:', data);
-            
-            // Function to format date to dd-mm-yyyy
-            function formatDate(dateString) {
-                if (!dateString) return '';
-                const date = new Date(dateString);
-                const day = String(date.getDate()).padStart(2, '0');
-                const month = String(date.getMonth() + 1).padStart(2, '0');
-                const year = date.getFullYear();
-                return `${day}-${month}-${year}`;
-            }
-
             // Header design
             doc.setFillColor(24, 24, 24);
             doc.rect(0, 0, 210, 40, 'F');
             
-            // Green accent line
             doc.setFillColor(16, 163, 127);
             doc.rect(0, 0, 210, 3, 'F');
             
-            // Header text
             doc.setTextColor(255, 255, 255);
             doc.setFontSize(16);
             doc.setFont(undefined, 'bold');
@@ -1609,7 +2023,6 @@
 
             yPos += 10;
 
-            // Stats boxes
             const statBoxWidth = 42;
             const statBoxHeight = 25;
             const startX = 15;
@@ -1625,22 +2038,18 @@
             stats.forEach((stat, index) => {
                 const x = startX + (statBoxWidth + gap) * index;
                 
-                // Background
                 doc.setFillColor(248, 250, 252);
                 doc.roundedRect(x, yPos, statBoxWidth, statBoxHeight, 3, 3, 'F');
                 
-                // Border
                 doc.setDrawColor(226, 232, 240);
                 doc.setLineWidth(0.5);
                 doc.roundedRect(x, yPos, statBoxWidth, statBoxHeight, 3, 3, 'S');
                 
-                // Number
                 doc.setTextColor(stat.color[0], stat.color[1], stat.color[2]);
                 doc.setFontSize(18);
                 doc.setFont(undefined, 'bold');
                 doc.text(stat.value.toString(), x + statBoxWidth / 2, yPos + 12, { align: 'center' });
                 
-                // Label
                 doc.setTextColor(100, 116, 139);
                 doc.setFontSize(9);
                 doc.setFont(undefined, 'normal');
@@ -1659,21 +2068,17 @@
             
             yPos += 8;
             
-            // Progress bar
             const barWidth = 160;
             const barHeight = 8;
             const barX = (210 - barWidth) / 2;
             
-            // Background bar
             doc.setFillColor(229, 231, 235);
             doc.roundedRect(barX, yPos, barWidth, barHeight, 4, 4, 'F');
             
-            // Progress bar
             const progressWidth = (barWidth * completionRate) / 100;
             doc.setFillColor(16, 163, 127);
             doc.roundedRect(barX, yPos, progressWidth, barHeight, 4, 4, 'F');
             
-            // Percentage text
             doc.setTextColor(31, 41, 55);
             doc.setFontSize(11);
             doc.setFont(undefined, 'bold');
@@ -1693,7 +2098,7 @@
                 const monthlyData = Object.entries(data.monthlyStats)
                     .sort()
                     .reverse()
-                    .slice(0, 6) // Show last 6 months
+                    .slice(0, 6)
                     .map(([month, stats]) => {
                         const monthName = new Date(month + '-01').toLocaleDateString('en-US', { year: 'numeric', month: 'short' });
                         const monthTotal = stats.prayed + stats.missed + stats.qadha;
@@ -1734,9 +2139,8 @@
                 }
             }
 
-            // Recent prayer records (last 10 days with activity)
+            // Recent prayer records
             if (data.dailyRecords.length > 0) {
-                // Check if we need a new page
                 if (yPos > 200) {
                     doc.addPage();
                     yPos = 20;
@@ -1751,7 +2155,7 @@
 
                 const recentRecords = data.dailyRecords
                     .sort((a, b) => new Date(b.date) - new Date(a.date))
-                    .slice(0, 15); // Show last 15 days with activity
+                    .slice(0, 15);
 
                 recentRecords.forEach(record => {
                     const dateObj = new Date(record.date);
@@ -1761,7 +2165,6 @@
                         day: 'numeric' 
                     });
 
-                    // Date header
                     doc.setFillColor(248, 250, 252);
                     doc.rect(15, yPos, 180, 8, 'F');
                     doc.setTextColor(75, 85, 99);
@@ -1771,7 +2174,6 @@
 
                     yPos += 10;
 
-                    // Prayer status for this day
                     const prayerStatusText = record.prayers.map(p => {
                         const icon = p.status === 'prayed' ? 'DONE' : p.status === 'missed' ? 'MISS' : 'QADHA';
                         const prayerName = p.prayer.charAt(0).toUpperCase() + p.prayer.slice(1);
@@ -1786,7 +2188,6 @@
                     
                     yPos += wrappedText.length * 4 + 3;
 
-                    // Check if we need a new page
                     if (yPos > 250) {
                         doc.addPage();
                         yPos = 20;
@@ -1804,19 +2205,17 @@
                 doc.text('Generated by Salah Tracker App', 105, 285, { align: 'center' });
                 doc.text('May Allah accept your prayers and guide you on the straight path.', 105, 290, { align: 'center' });
             }
-            
-            console.log('PDF generation completed');
         }
 
         function clearData() {
             if (confirm('Are you sure you want to clear ALL your prayer data? This cannot be undone.')) {
                 if (confirm('This will permanently delete all your prayer records. Continue?')) {
-                    if (currentUser) {
-                        localStorage.removeItem(`salahTracker_${currentUser}`);
+                    if (currentUserProfile) {
+                        localStorage.removeItem(`salahTracker_${currentUserProfile.accessCode}`);
                     }
-                    sessionStorage.removeItem('currentSalahUser');
                     
                     currentUser = null;
+                    currentUserProfile = null;
                     prayerData = {};
                     
                     closeModal('dataModal');
@@ -1825,9 +2224,58 @@
             }
         }
 
+        async function logout() {
+            try {
+                if (dataListener) {
+                    dataListener();
+                    dataListener = null;
+                }
+                
+                if (window.firebase && window.firebase.auth && currentFirebaseUser) {
+                    await window.firebase.auth.signOut();
+                }
+                
+                currentUser = null;
+                currentUserProfile = null;
+                currentFirebaseUser = null;
+                prayerData = {};
+                
+                document.getElementById('mainContent').style.display = 'none';
+                document.getElementById('loginSection').style.display = 'block';
+                document.getElementById('accessCode').value = '';
+                
+                window.updateCloudStatus('offline', '📱 Offline Mode');
+                
+            } catch (error) {
+                console.error('Logout error:', error);
+            }
+        }
+
+        function showError(message) {
+            const errorEl = document.getElementById('errorMessage');
+            if (errorEl) {
+                errorEl.textContent = message;
+                errorEl.style.display = 'block';
+                setTimeout(() => {
+                    errorEl.style.display = 'none';
+                }, 5000);
+            }
+        }
+
+        function showSuccess(message) {
+            const successEl = document.getElementById('successMessage');
+            if (successEl) {
+                successEl.textContent = message;
+                successEl.style.display = 'block';
+                setTimeout(() => {
+                    successEl.style.display = 'none';
+                }, 5000);
+            }
+        }
+
         // Close modals when clicking outside
         window.onclick = function(event) {
-            const modals = ['prayerModal', 'dayModal', 'statsModal', 'dataModal'];
+            const modals = ['prayerModal', 'dayModal', 'statsModal', 'dataModal', 'signupModal'];
             modals.forEach(modalId => {
                 const modal = document.getElementById(modalId);
                 if (event.target === modal) {
@@ -1842,21 +2290,19 @@
             });
         }
 
-        // Allow Enter key to set user name
+        // Allow Enter key for inputs
         document.addEventListener('DOMContentLoaded', function() {
-            const userInput = document.getElementById('userNameInput');
-            if (userInput) {
-                userInput.addEventListener('keypress', function(e) {
+            const accessCodeInput = document.getElementById('accessCode');
+            if (accessCodeInput) {
+                accessCodeInput.addEventListener('keypress', function(e) {
                     if (e.key === 'Enter') {
-                        setUserName();
+                        login();
                     }
                 });
             }
         });
 
         // Initialize app when page loads
-        document.addEventListener('DOMContentLoaded', init);
-        
         if (document.readyState === 'loading') {
             document.addEventListener('DOMContentLoaded', init);
         } else {
