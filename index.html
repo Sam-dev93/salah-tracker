@@ -2,36 +2,72 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no, viewport-fit=cover">
-    <title>Ticket Father - Dashboard</title>
-    
-    <!-- PWA Meta Tags -->
-    <meta name="description" content="Season 2025-2026 ticket management dashboard">
-    <meta name="theme-color" content="#181818">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
     <meta name="apple-mobile-web-app-capable" content="yes">
     <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
-    <meta name="apple-mobile-web-app-title" content="Ticket Father">
-    <meta name="application-name" content="Ticket Father">
-    <meta name="msapplication-TileColor" content="#181818">
-    <meta name="msapplication-TileImage" content="/icon-192.png">
-    <meta name="format-detection" content="telephone=no">
+    <meta name="apple-mobile-web-app-title" content="Salah Tracker">
+    <meta name="theme-color" content="#181818">
+    <meta name="mobile-web-app-capable" content="yes">
+    <link rel="manifest" href="manifest.json">
+    <title>Salah Tracker - Daily Prayer Tracking</title>
+    <!-- iOS Icons -->
+    <link rel="apple-touch-icon" sizes="180x180" href="icon-192.png">
+    <link rel="icon" type="image/png" sizes="32x32" href="icon-192.png">
     
-    <!-- iOS Splash Screens -->
-    <meta name="apple-mobile-web-app-capable" content="yes">
-    <link rel="apple-touch-startup-image" href="/icon-512.png">
+    <!-- Firebase SDK v10 -->
+    <script type="module">
+        (async () => {
+            try {
+                const { initializeApp } = await import('https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js');
+                const { getAuth, signInAnonymously, onAuthStateChanged } = await import('https://www.gstatic.com/firebasejs/10.7.1/firebase-auth.js');
+                const { getFirestore, doc, setDoc, getDoc, onSnapshot, collection, getDocs } = await import('https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js');
+                
+                const firebaseConfig = {
+                    apiKey: "AIzaSyCMM5u7GiO-D5r15axueQX0Uu3sy9_W4Bg",
+                    authDomain: "salah-tracker-2af1f.firebaseapp.com",
+                    projectId: "salah-tracker-2af1f",
+                    storageBucket: "salah-tracker-2af1f.firebasestorage.app",
+                    messagingSenderId: "507734085886",
+                    appId: "1:507734085886:web:74a7c531a6db87071e95af"
+                };
+                
+                const app = initializeApp(firebaseConfig);
+                const auth = getAuth(app);
+                const db = getFirestore(app);
+                
+                window.firebase = { auth, db };
+                window.firebaseModules = {
+                    signInAnonymously,
+                    onAuthStateChanged,
+                    doc,
+                    setDoc,
+                    getDoc,
+                    onSnapshot,
+                    collection,
+                    getDocs
+                };
+                
+                window.firebaseReady = true;
+                window.updateCloudStatus('connected', '☁️ Cloud Sync Ready');
+                
+                onAuthStateChanged(auth, (user) => {
+                    window.currentFirebaseUser = user;
+                    if (user && window.currentUserProfile) {
+                        window.loadCloudData();
+                    }
+                });
+                
+            } catch (error) {
+                console.warn('Firebase not available, using offline mode:', error);
+                window.firebaseError = error;
+                window.updateCloudStatus('offline', '📱 Offline Mode');
+            }
+        })();
+    </script>
     
-    <!-- PWA Icons -->
-    <link rel="icon" type="image/png" sizes="32x32" href="/icon-192.png">
-    <link rel="icon" type="image/png" sizes="16x16" href="/icon-192.png">
-    <link rel="apple-touch-icon" sizes="180x180" href="/icon-192.png">
-    <link rel="apple-touch-icon" sizes="152x152" href="/icon-192.png">
-    <link rel="apple-touch-icon" sizes="120x120" href="/icon-192.png">
-    <link rel="apple-touch-icon" sizes="76x76" href="/icon-192.png">
-    <link rel="icon" type="image/png" sizes="192x192" href="/icon-192.png">
-    <link rel="icon" type="image/png" sizes="512x512" href="/icon-512.png">
-    
-    <!-- PWA Manifest -->
-    <link rel="manifest" href="/manifest.json">
+    <!-- PDF Generation Libraries -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf-autotable/3.5.25/jspdf.plugin.autotable.min.js"></script>
     
     <style>
         * {
@@ -39,2092 +75,2257 @@
             padding: 0;
             box-sizing: border-box;
         }
-        
+
         body {
-            font-family: -apple-system, BlinkMacSystemFont, 'SF Pro Display', 'Segoe UI', Roboto, sans-serif;
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
             background: #181818;
+            min-height: 100vh;
             color: #E6E6E6;
-            line-height: 1.47;
-            padding: env(safe-area-inset-top) env(safe-area-inset-right) env(safe-area-inset-bottom) env(safe-area-inset-left);
-            -webkit-font-smoothing: antialiased;
-            -moz-osx-font-smoothing: grayscale;
-            /* PWA specific */
-            -webkit-touch-callout: none;
-            -webkit-user-select: none;
-            user-select: none;
-            overscroll-behavior: none;
-            -webkit-overflow-scrolling: touch;
+            margin: 0;
+            padding: 0;
+            padding-top: env(safe-area-inset-top);
+            padding-bottom: env(safe-area-inset-bottom);
+            padding-left: env(safe-area-inset-left);
+            padding-right: env(safe-area-inset-right);
         }
-        
-        /* Prevent bounce on iOS */
-        html {
-            position: fixed;
-            height: 100%;
-            width: 100%;
-            overflow: hidden;
-        }
-        
-        body {
-            height: 100%;
-            width: 100%;
-            overflow-y: auto;
-            overflow-x: hidden;
-        }
-        
+
         .container {
-            max-width: 100%;
+            max-width: 414px;
             margin: 0 auto;
-            padding: 16px;
             min-height: 100vh;
             background: #181818;
-            /* PWA safe area */
-            padding-top: max(16px, env(safe-area-inset-top));
-            padding-bottom: max(16px, env(safe-area-inset-bottom));
-            padding-left: max(16px, env(safe-area-inset-left));
-            padding-right: max(16px, env(safe-area-inset-right));
+            overflow: hidden;
+            padding-top: 15px;
         }
-        
-        .header {
-            text-align: center;
-            margin-bottom: 24px;
-            padding: 20px 0;
+
+        /* Login Section */
+        .login-section {
+            margin: 60px 20px;
+            display: none;
         }
-        
-        .header h1 {
-            font-size: 34px;
-            font-weight: 700;
-            color: #F5F5F5;
-            margin-bottom: 6px;
-            letter-spacing: -0.41px;
-        }
-        
-        .header p {
-            font-size: 17px;
-            color: #B8B8B8;
-            font-weight: 400;
-        }
-        
-        .stats-grid {
-            display: grid;
-            grid-template-columns: repeat(2, 1fr);
-            gap: 12px;
-            margin-bottom: 24px;
-        }
-        
-        .stat-card {
+
+        .login-card {
             background: #1F1F1F;
-            border-radius: 16px;
-            padding: 20px 16px;
-            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.3);
+            border-radius: 20px;
+            padding: 40px 30px;
             border: 1px solid #2E2E2E;
+            box-shadow: 0 20px 50px rgba(0, 0, 0, 0.3);
+        }
+
+        .app-title {
+            font-size: 32px;
+            font-weight: 700;
+            margin-bottom: 8px;
+            color: #F5F5F5;
             text-align: center;
         }
-        
-        .stat-value {
-            font-size: 28px;
-            font-weight: 700;
-            margin-bottom: 6px;
-            line-height: 1.2;
-            letter-spacing: -0.34px;
-            color: #F5F5F5;
-        }
-        
-        .stat-label {
-            font-size: 13px;
+
+        .app-subtitle {
+            font-size: 16px;
             color: #B8B8B8;
-            font-weight: 400;
-            letter-spacing: -0.08px;
+            text-align: center;
+            margin-bottom: 40px;
         }
-        
-        .stat-card.available-tickets .stat-value {
-            color: #5A9FD4;
+
+        .cloud-status {
+            text-align: center;
+            margin-bottom: 30px;
+            padding: 8px 16px;
+            border-radius: 20px;
+            font-size: 12px;
+            font-weight: 600;
         }
-        
-        .profit-negative {
-            color: #E85A5A;
-        }
-        
-        .profit-positive {
+
+        .cloud-status.connected {
+            background: rgba(16, 163, 127, 0.2);
             color: #10A37F;
         }
-        
-        .section {
-            background: #1F1F1F;
-            border-radius: 16px;
-            margin-bottom: 16px;
-            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.3);
-            border: 1px solid #2E2E2E;
-            overflow: hidden;
+
+        .cloud-status.offline {
+            background: rgba(255, 149, 0, 0.2);
+            color: #FF9500;
         }
-        
-        .section-title {
-            font-size: 20px;
+
+        .form-group {
+            margin-bottom: 20px;
+        }
+
+        .form-label {
+            display: block;
+            font-size: 14px;
             font-weight: 600;
-            padding: 20px 20px 16px 20px;
-            border-bottom: 1px solid #2E2E2E;
-            color: #F5F5F5;
-            letter-spacing: -0.24px;
-            text-align: center;
-        }
-        
-        .match-item {
-            padding: 16px 20px;
-            border-bottom: 1px solid #2E2E2E;
-            background: #1F1F1F;
-        }
-        
-        .match-item:last-child {
-            border-bottom: none;
-        }
-        
-        .match-header {
-            display: flex;
-            justify-content: space-between;
-            align-items: flex-start;
+            color: #B8B8B8;
             margin-bottom: 8px;
         }
-        
-        .match-details-info h3 {
-            font-size: 17px;
-            font-weight: 600;
-            color: #F5F5F5;
-            line-height: 1.29;
-            letter-spacing: -0.41px;
-            margin-bottom: 2px;
-        }
-        
-        .match-date {
-            font-size: 15px;
-            color: #B8B8B8;
-            font-weight: 400;
-            letter-spacing: -0.24px;
-        }
-        
-        .tickets-status {
-            text-align: right;
-            flex-shrink: 0;
-            margin-left: 16px;
-        }
-        
-        .tickets-count {
-            font-size: 20px;
-            font-weight: 700;
-            color: #5A9FD4;
-            line-height: 1.2;
-            letter-spacing: -0.24px;
-        }
-        
-        .tickets-label {
-            font-size: 13px;
-            color: #B8B8B8;
-            font-weight: 400;
-            letter-spacing: -0.08px;
-        }
-        
-        .match-details {
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            margin-top: 12px;
-            padding-top: 12px;
-            border-top: 1px solid #2E2E2E;
-        }
-        
-        .detail-item {
-            display: flex;
-            flex-direction: column;
-            align-items: center;
-            flex: 1;
-        }
-        
-        .detail-label {
-            color: #B8B8B8;
-            font-size: 12px;
-            font-weight: 400;
-            margin-bottom: 4px;
-            letter-spacing: -0.06px;
-        }
-        
-        .detail-value {
-            font-weight: 600;
-            font-size: 15px;
-            letter-spacing: -0.24px;
+
+        .form-input {
+            width: 100%;
+            padding: 16px 20px;
+            border: 1px solid #3A3A3A;
+            border-radius: 12px;
+            background: #2A2A2A;
             color: #E6E6E6;
+            font-size: 16px;
+            transition: all 0.3s ease;
         }
-        
-        .detail-value.profit-positive {
-            color: #10A37F;
+
+        .form-input:focus {
+            outline: none;
+            border-color: #10A37F;
+            background: #1F1F1F;
         }
-        
-        .detail-value.profit-negative {
-            color: #E85A5A;
-        }
-        
-        .refresh-btn {
+
+        .login-button {
+            width: 100%;
+            padding: 16px;
             background: #10A37F;
+            color: white;
             border: none;
-            color: #ffffff;
-            padding: 16px 24px;
-            border-radius: 14px;
-            font-size: 17px;
+            border-radius: 12px;
+            font-size: 16px;
             font-weight: 600;
             cursor: pointer;
-            width: 100%;
-            margin: 24px 0;
-            transition: all 0.2s ease;
-            box-shadow: 0 2px 12px rgba(16, 163, 127, 0.25);
-            letter-spacing: -0.41px;
-            /* Mobile touch improvements */
-            -webkit-tap-highlight-color: transparent;
-            touch-action: manipulation;
+            transition: all 0.3s ease;
+            margin-bottom: 20px;
         }
-        
-        .refresh-btn:hover {
-            background: #0D8B6F;
-            transform: translateY(-1px);
-            box-shadow: 0 4px 20px rgba(16, 163, 127, 0.35);
+
+        .login-button:hover {
+            background: #0D7A5F;
         }
-        
-        .refresh-btn:active {
-            transform: translateY(0);
-            box-shadow: 0 1px 8px rgba(16, 163, 127, 0.2);
+
+        .signup-section {
+            text-align: center;
+            padding: 20px 0;
+            border-top: 1px solid #2E2E2E;
+            margin-top: 20px;
         }
-        
-        .refresh-btn:disabled {
-            background: #3A3A3A;
-            transform: none;
-            box-shadow: none;
-            cursor: not-allowed;
+
+        .signup-button {
+            background: transparent;
+            color: #10A37F;
+            border: 1px solid #10A37F;
+            padding: 12px 24px;
+            border-radius: 8px;
+            font-size: 14px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s ease;
         }
-        
-        .team-header {
+
+        .signup-button:hover {
+            background: #10A37F;
+            color: white;
+        }
+
+        .error-message {
+            background: rgba(255, 68, 68, 0.1);
+            border: 1px solid #FF4444;
+            color: #FF4444;
+            padding: 12px 16px;
+            border-radius: 8px;
+            margin-bottom: 20px;
+            font-size: 14px;
+            text-align: center;
+            display: none;
+        }
+
+        .success-message {
+            background: rgba(16, 163, 127, 0.1);
+            border: 1px solid #10A37F;
+            color: #10A37F;
+            padding: 12px 16px;
+            border-radius: 8px;
+            margin-bottom: 20px;
+            font-size: 14px;
+            text-align: center;
+            display: none;
+        }
+
+        /* Main Content */
+        .main-content {
+            display: block;
+        }
+
+        .header {
+            padding: 15px 20px 20px 20px;
+            text-align: center;
+        }
+
+        .main-title {
+            font-size: 28px;
+            font-weight: 700;
+            margin-bottom: 12px;
+            color: #F5F5F5;
+        }
+
+        .current-date {
+            font-size: 16px;
+            font-weight: 600;
+            color: #B8B8B8;
+        }
+
+        .user-info {
+            margin-top: 15px;
+            padding: 12px 16px;
+            background: rgba(16, 163, 127, 0.1);
+            border-radius: 12px;
+            color: #E6E6E6;
+            font-size: 14px;
+            font-weight: 600;
+        }
+
+
+
+        .stats-container {
+            display: flex;
+            gap: 12px;
+            margin: 12px 12px 20px;
+        }
+
+        .stat-card {
+            flex: 1;
+            background: #1F1F1F;
+            padding: 16px;
+            border-radius: 14px;
+            border: 1px solid #2E2E2E;
+            text-align: center;
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+
+        .stat-card:hover {
+            background: #2A2A2A;
+        }
+
+        .stat-card.missed {
+            border-color: #FF4444;
+        }
+
+        .stat-card.qadha {
+            border-color: #6366F1;
+        }
+
+        .stat-number {
+            font-size: 24px;
+            font-weight: 700;
+            margin-bottom: 4px;
+        }
+
+        .stat-card.missed .stat-number {
+            color: #FF4444;
+        }
+
+        .stat-card.qadha .stat-number {
+            color: #6366F1;
+        }
+
+        .stat-label {
+            font-size: 14px;
+            color: #B8B8B8;
+            font-weight: 600;
+        }
+
+        .today-prayers {
+            margin: 20px 12px 15px;
+        }
+
+        .section-title {
+            font-size: 16px;
+            font-weight: 700;
+            color: #F5F5F5;
+            margin-bottom: 12px;
+            padding-left: 5px;
+            text-align: center;
+        }
+
+        .prayer-times {
+            background: #1F1F1F;
+            border-radius: 16px;
+            overflow: hidden;
+            border: 1px solid #2E2E2E;
+        }
+
+        .prayer-row {
             display: flex;
             justify-content: space-between;
             align-items: center;
-            padding: 20px;
+            padding: 15px 18px;
             border-bottom: 1px solid #2E2E2E;
+            transition: all 0.3s ease;
+            cursor: pointer;
         }
-        
-        .team-name {
-            font-size: 20px;
-            font-weight: 700;
+
+        .prayer-row:last-child {
+            border-bottom: none;
+        }
+
+        .prayer-row:hover {
+            background: rgba(255, 255, 255, 0.05);
+        }
+
+        .prayer-row.prayed {
+            background: linear-gradient(135deg, #10A37F, #0D8B6F);
+            color: white;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+        }
+
+        .prayer-row.missed {
+            background: linear-gradient(135deg, #FF4444, #CC3333);
+            color: white;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+        }
+
+        .prayer-row.qadha {
+            background: linear-gradient(135deg, #6366F1, #4F46E5);
+            color: white;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+        }
+
+        .prayer-info {
             display: flex;
             align-items: center;
-            gap: 10px;
-            color: #F5F5F5;
-            letter-spacing: -0.24px;
         }
-        
-        .team-emoji {
-            width: 32px;
-            height: 32px;
+
+        .prayer-icon {
+            width: 30px;
+            height: 30px;
             background: rgba(255, 255, 255, 0.1);
             border-radius: 50%;
             display: flex;
             align-items: center;
             justify-content: center;
-            font-size: 16px;
+            margin-right: 12px;
+            font-size: 14px;
             border: 1px solid rgba(255, 255, 255, 0.1);
-            flex-shrink: 0;
         }
-        
-        .team-summary {
-            text-align: right;
-            font-size: 13px;
-            line-height: 1.38;
+
+        .prayer-row.prayed .prayer-icon,
+        .prayer-row.missed .prayer-icon,
+        .prayer-row.qadha .prayer-icon {
+            background: rgba(255, 255, 255, 0.2);
+            border: 1px solid rgba(255, 255, 255, 0.2);
         }
-        
-        .team-tickets {
-            font-weight: 600;
-            color: #5A9FD4;
-            margin-bottom: 2px;
-            letter-spacing: -0.08px;
-        }
-        
-        .team-spent {
-            color: #B8B8B8;
-            margin-bottom: 2px;
-            letter-spacing: -0.08px;
-        }
-        
-        .team-profit {
-            font-weight: 700;
-            font-size: 15px;
-            letter-spacing: -0.24px;
-        }
-        
-        .team-profit.profit-positive {
-            color: #10A37F;
-        }
-        
-        .team-profit.profit-negative {
-            color: #E85A5A;
-        }
-        
-        .expand-btn {
-            background: #2A2A2A;
-            border: none;
-            color: #10A37F;
-            padding: 12px 20px;
-            border-radius: 12px;
+
+        .prayer-details h4 {
             font-size: 17px;
             font-weight: 600;
-            cursor: pointer;
-            margin: 16px 20px;
-            transition: all 0.2s ease;
-            letter-spacing: -0.41px;
-            border: 1px solid #3A3A3A;
-            /* Mobile touch improvements */
-            -webkit-tap-highlight-color: transparent;
-            touch-action: manipulation;
+            margin-bottom: 2px;
+            color: inherit;
         }
-        
-        .expand-btn.hide-matches {
-            color: #E85A5A;
+
+        .prayer-details p {
+            font-size: 12px;
+            opacity: 0.7;
         }
-        
-        .expand-btn:hover {
-            background: #353535;
-            transform: translateY(-1px);
+
+        .prayer-status {
+            font-size: 14px;
+            font-weight: 600;
+            padding: 4px 8px;
+            border-radius: 6px;
+            background: rgba(255, 255, 255, 0.1);
         }
-        
-        .expand-btn:active {
-            transform: translateY(0);
-            background: #404040;
+
+        .monthly-view {
+            margin: 20px 12px;
         }
-        
-        .team-details.collapsed {
-            display: none;
-        }
-        
-        .loading {
-            text-align: center;
-            color: #B8B8B8;
-            font-size: 17px;
-            margin: 20px 0;
-            font-weight: 400;
-        }
-        
-        .loading-progress {
-            text-align: center;
-            color: #10A37F;
-            font-size: 15px;
-            margin: 10px 0;
-            font-weight: 500;
-        }
-        
-        .progress-container {
-            width: 100%;
-            max-width: 300px;
-            margin: 16px auto;
-            background: #2A2A2A;
-            border-radius: 10px;
-            overflow: hidden;
-            height: 8px;
-        }
-        
-        .progress-bar {
-            height: 100%;
-            background: linear-gradient(90deg, #10A37F, #0D8B6F);
-            border-radius: 10px;
-            transition: width 0.3s ease;
-            width: 0%;
-        }
-        
-        .progress-text {
-            text-align: center;
-            color: #10A37F;
-            font-size: 15px;
-            margin: 8px 0;
-            font-weight: 500;
-        }
-        
-        .success-message {
-            text-align: center;
-            color: #10A37F;
-            font-size: 15px;
-            font-weight: 500;
-            margin: 16px 0 24px 0;
-            padding: 12px;
-            background: rgba(16, 163, 127, 0.1);
-            border-radius: 12px;
-            border: 1px solid rgba(16, 163, 127, 0.2);
-        }
-        
-        .empty-state {
-            text-align: center;
-            color: #B8B8B8;
-            padding: 40px 20px;
-            font-size: 17px;
-            font-weight: 400;
-        }
-        
-        .separator {
-            height: 1px;
-            background: repeating-linear-gradient(
-                to right,
-                #2E2E2E 0px,
-                #2E2E2E 8px,
-                transparent 8px,
-                transparent 16px
-            );
-            margin: 32px 0;
-        }
-        
-        /* Match Popup Modal */
-        .match-popup-overlay {
-            position: fixed;
-            top: 0;
-            left: 0;
-            right: 0;
-            bottom: 0;
-            background: rgba(0, 0, 0, 0.4);
-            z-index: 1000;
-            display: none;
+
+        .month-navigation {
+            display: flex;
             align-items: center;
-            justify-content: center;
-            padding: 20px;
+            justify-content: space-between;
+            margin-bottom: 18px;
         }
-        
-        .match-popup {
+
+        .nav-arrow {
+            background: #2A2A2A;
+            border: 1px solid #3A3A3A;
+            color: #E6E6E6;
+            padding: 10px 14px;
+            border-radius: 8px;
+            cursor: pointer;
+            font-size: 16px;
+            transition: all 0.3s ease;
+            user-select: none;
+        }
+
+        .nav-arrow:hover {
+            background: #353535;
+            color: #F5F5F5;
+        }
+
+        .month-title {
+            font-size: 16px;
+            font-weight: 700;
+            color: #F5F5F5;
+            text-align: center;
+            flex: 1;
+            margin: 0 12px;
+        }
+
+        .calendar-container {
             background: #1F1F1F;
-            border-radius: 20px;
-            width: 100%;
-            max-width: 800px;
-            max-height: 90vh;
-            overflow-y: auto;
-            position: relative;
-            box-shadow: 0 20px 60px rgba(0, 0, 0, 0.5);
+            border-radius: 16px;
+            padding: 20px;
             border: 1px solid #2E2E2E;
         }
-        
-        .match-popup-header {
-            padding: 24px 24px 16px 24px;
-            border-bottom: 1px solid #2E2E2E;
+
+        .calendar-grid {
+            display: grid;
+            grid-template-columns: repeat(7, 1fr);
+            gap: 4px;
+            margin-top: 12px;
+        }
+
+        .day-header {
+            font-weight: 600;
+            text-align: center;
+            padding: 10px;
+            color: #B8B8B8;
+            font-size: 12px;
+        }
+
+        .calendar-day {
+            aspect-ratio: 1;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            background: #2A2A2A;
+            border-radius: 8px;
+            font-size: 11px;
+            font-weight: 600;
+            border: 1px solid #3A3A3A;
+            transition: all 0.3s ease;
+            cursor: pointer;
+            position: relative;
+        }
+
+        .calendar-day:hover {
+            background: #353535;
+        }
+
+        .calendar-day.today {
+            border: 2px solid #10A37F;
+            background: rgba(16, 163, 127, 0.1);
+        }
+
+        .calendar-day.has-data {
+            background: #404040;
+        }
+
+        .calendar-day.has-data:hover {
+            background: #505050;
+        }
+
+        .day-indicators {
+            display: flex;
+            gap: 1px;
+            margin-top: 2px;
+        }
+
+        .indicator {
+            width: 4px;
+            height: 4px;
+            border-radius: 50%;
+        }
+
+        .indicator.prayed {
+            background: #10A37F;
+        }
+
+        .indicator.missed {
+            background: #FF4444;
+        }
+
+        .indicator.qadha {
+            background: #6366F1;
+        }
+
+        /* Modal styles */
+        .modal {
+            display: none;
+            position: fixed;
+            z-index: 1000;
+            left: 0;
+            top: 0;
+            width: 100%;
+            height: 100%;
+            background-color: rgba(0, 0, 0, 0.8);
+            backdrop-filter: blur(5px);
+        }
+
+        .modal-content {
+            background: #1F1F1F;
+            margin: 35% auto;
+            padding: 20px;
+            border: 1px solid #2E2E2E;
+            border-radius: 16px;
+            width: 85%;
+            max-width: 350px;
+            position: relative;
+            max-height: 60vh;
+            overflow-y: auto;
+        }
+
+        .modal-header {
             display: flex;
             justify-content: space-between;
-            align-items: flex-start;
-        }
-        
-        .match-popup-title {
-            font-size: 24px;
-            font-weight: 700;
-            color: #F5F5F5;
-            letter-spacing: -0.29px;
-            margin-bottom: 4px;
-        }
-        
-        .match-popup-date {
-            font-size: 17px;
-            color: #B8B8B8;
-            font-weight: 400;
-        }
-        
-        .close-btn {
-            background: #2A2A2A;
-            border: none;
-            border-radius: 20px;
-            width: 40px;
-            height: 40px;
-            display: flex;
             align-items: center;
-            justify-content: center;
-            font-size: 24px;
-            color: #B8B8B8;
-            cursor: pointer;
-            transition: all 0.2s ease;
-            flex-shrink: 0;
-            margin-left: 16px;
-            border: 1px solid #3A3A3A;
-        }
-        
-        .close-btn:hover {
-            background: #353535;
-            color: #F5F5F5;
-        }
-        
-        .match-popup-content {
-            padding: 16px;
-        }
-        
-        .match-stats-grid {
-            display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(120px, 1fr));
-            gap: 16px;
-            margin-bottom: 32px;
-        }
-        
-        .match-stat-card {
-            background: #2A2A2A;
-            border-radius: 12px;
-            padding: 16px;
-            text-align: center;
-            border: 1px solid #3A3A3A;
-        }
-        
-        .match-stat-value {
-            font-size: 18px;
-            font-weight: 700;
-            margin-bottom: 4px;
-            letter-spacing: -0.29px;
-            word-break: break-word;
-            color: #F5F5F5;
-        }
-        
-        .match-stat-value.profit-positive {
-            color: #10A37F;
-        }
-        
-        .match-stat-value.profit-negative {
-            color: #E85A5A;
-        }
-        
-        .match-stat-label {
-            font-size: 11px;
-            color: #B8B8B8;
-            font-weight: 500;
-            letter-spacing: -0.08px;
-        }
-        
-        .tickets-chart-container {
-            background: transparent;
-            border-radius: 0;
-            padding: 16px 0;
-            margin-bottom: 0;
-        }
-        
-        .chart-title {
-            font-size: 18px;
-            font-weight: 600;
-            margin-bottom: 16px;
-            color: #F5F5F5;
-            letter-spacing: -0.24px;
-            text-align: center;
-        }
-        
-        .tickets-table {
-            width: 100%;
-            border-collapse: collapse;
-            font-size: 12px;
-            background: #1F1F1F;
-            border-radius: 12px;
-            overflow: hidden;
-            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.3);
-        }
-        
-        .tickets-table th {
-            background: #2A2A2A;
-            padding: 10px 6px;
-            text-align: center;
-            font-weight: 600;
-            color: #E6E6E6;
-            border-bottom: 1px solid #3A3A3A;
-            font-size: 11px;
-            letter-spacing: -0.08px;
-        }
-        
-        .tickets-table td {
-            padding: 8px 6px;
+            margin-bottom: 20px;
+            padding-bottom: 12px;
             border-bottom: 1px solid #2E2E2E;
-            color: #E6E6E6;
-            text-align: center;
-            font-size: 12px;
-            word-break: break-word;
         }
-        
-        .tickets-table tr:last-child td {
-            border-bottom: none;
+
+        .modal-title {
+            font-size: 20px;
+            font-weight: 700;
+            color: #F5F5F5;
         }
-        
-        .tickets-table tr:hover {
-            background: #2A2A2A;
-        }
-        
-        .status-sold {
-            color: #E85A5A !important;
-            font-weight: 600;
-        }
-        
-        .status-available {
-            color: #10A37F !important;
-            font-weight: 600;
-        }
-        
-        .match-loading {
-            text-align: center;
-            padding: 40px;
+
+        .close {
             color: #B8B8B8;
-            font-size: 17px;
-        }
-        
-        .match-loading-spinner {
-            width: 24px;
-            height: 24px;
-            border: 3px solid #3A3A3A;
-            border-top: 3px solid #10A37F;
-            border-radius: 50%;
-            animation: spin 1s linear infinite;
-            margin: 0 auto 16px auto;
-        }
-        
-        @keyframes spin {
-            0% { transform: rotate(0deg); }
-            100% { transform: rotate(360deg); }
-        }
-        
-        .clickable-match {
+            font-size: 28px;
+            font-weight: bold;
             cursor: pointer;
-            transition: background-color 0.2s ease;
+            transition: color 0.3s ease;
+            padding: 8px;
+            line-height: 1;
         }
-        
-        .clickable-match:hover {
+
+        .close:hover {
+            color: #F5F5F5;
+        }
+
+        .modal-options {
+            display: flex;
+            flex-direction: column;
+            gap: 12px;
+        }
+
+        .option-button {
+            padding: 12px 16px;
+            border: 1px solid #3A3A3A;
+            border-radius: 8px;
             background: #2A2A2A;
+            color: #E6E6E6;
+            font-size: 16px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            text-align: center;
         }
-        
-        /* PWA Installation Banner */
-        .install-banner {
+
+        .option-button:hover {
+            background: #353535;
+        }
+
+        .option-button.prayed {
+            background: #10A37F;
+            border-color: #10A37F;
+            color: white;
+        }
+
+        .option-button.missed {
+            background: #FF4444;
+            border-color: #FF4444;
+            color: white;
+        }
+
+        .option-button.qadha {
+            background: #6366F1;
+            border-color: #6366F1;
+            color: white;
+        }
+
+        .stats-list {
+            display: flex;
+            flex-direction: column;
+            gap: 8px;
+        }
+
+        .stats-item {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 8px 12px;
+            background: #2A2A2A;
+            border-radius: 6px;
+            font-size: 14px;
+        }
+
+        .qadha-button {
+            background: #6366F1;
+            color: white;
+            border: none;
+            padding: 4px 8px;
+            border-radius: 4px;
+            font-size: 11px;
+            cursor: pointer;
+            font-weight: 600;
+        }
+
+        .qadha-button:hover {
+            background: #4F46E5;
+        }
+
+        .footer {
+            text-align: center;
+            padding: 20px 12px;
+            color: #B8B8B8;
+            font-size: 11px;
+            border-top: 1px solid #2E2E2E;
+            margin-top: 20px;
+            margin-bottom: env(safe-area-inset-bottom);
+        }
+
+        .data-management-button {
+            background: #2A2A2A;
+            color: #B8B8B8;
+            border: 1px solid #3A3A3A;
+            padding: 8px 16px;
+            border-radius: 6px;
+            font-size: 12px;
+            cursor: pointer;
+            margin: 10px 5px;
+            transition: all 0.3s ease;
+        }
+
+        .data-management-button:hover {
+            background: #353535;
+            color: #E6E6E6;
+        }
+
+        .logout-button {
+            background: #FF4444;
+            color: white;
+            border: none;
+            padding: 12px 24px;
+            border-radius: 8px;
+            font-size: 14px;
+            font-weight: 600;
+            cursor: pointer;
+            margin: 16px auto;
+            display: block;
+        }
+
+        .logout-button:hover {
+            background: #CC3333;
+        }
+
+        /* Signup Modal */
+        .signup-form {
+            display: flex;
+            flex-direction: column;
+            gap: 20px;
+        }
+
+        /* Install prompt styles */
+        .install-prompt {
             position: fixed;
-            bottom: 0;
-            left: 0;
-            right: 0;
+            bottom: 20px;
+            left: 50%;
+            transform: translateX(-50%);
             background: #10A37F;
             color: white;
-            padding: 16px;
+            padding: 16px 24px;
+            border-radius: 12px;
+            box-shadow: 0 4px 20px rgba(0, 0, 0, 0.3);
+            display: none;
+            z-index: 2000;
+            max-width: 90%;
             text-align: center;
-            transform: translateY(100%);
-            transition: transform 0.3s ease;
-            z-index: 1000;
-            box-shadow: 0 -2px 10px rgba(0, 0, 0, 0.2);
+            animation: slideUp 0.3s ease;
+        }
+
+        .install-prompt.show {
+            display: block;
+        }
+
+        .install-prompt-text {
+            margin-bottom: 12px;
+            font-weight: 600;
+        }
+
+        .install-buttons {
             display: flex;
-            align-items: center;
+            gap: 8px;
             justify-content: center;
-            gap: 12px;
-            font-size: 15px;
-            font-weight: 500;
         }
-        
-        .install-banner.show {
-            transform: translateY(0);
-        }
-        
+
         .install-btn {
             background: white;
             color: #10A37F;
             border: none;
             padding: 8px 16px;
-            border-radius: 8px;
+            border-radius: 6px;
             font-weight: 600;
             cursor: pointer;
-            font-size: 15px;
-            transition: all 0.2s ease;
+            font-size: 14px;
         }
-        
-        .install-btn:hover {
-            transform: scale(1.05);
-            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
-        }
-        
-        .install-btn:active {
-            transform: scale(0.98);
-        }
-        
-        .install-banner-close {
-            position: absolute;
-            right: 16px;
-            top: 50%;
-            transform: translateY(-50%);
+
+        .install-btn.dismiss {
             background: transparent;
-            border: none;
             color: white;
-            font-size: 24px;
+            border: 1px solid rgba(255, 255, 255, 0.3);
+        }
+
+        @keyframes slideUp {
+            from {
+                transform: translateX(-50%) translateY(100px);
+                opacity: 0;
+            }
+            to {
+                transform: translateX(-50%) translateY(0);
+                opacity: 1;
+            }
+        }
+
+        /* PDF specific button styling */
+        .pdf-export-button {
+            background: linear-gradient(135deg, #10A37F, #0D8B6F);
+            color: white;
+            border: none;
+            padding: 12px 20px;
+            border-radius: 8px;
+            font-size: 14px;
+            font-weight: 600;
             cursor: pointer;
-            padding: 0;
-            width: 32px;
-            height: 32px;
+            transition: all 0.3s ease;
             display: flex;
             align-items: center;
             justify-content: center;
+            gap: 8px;
         }
-        
-        /* Offline indicator */
-        .offline-indicator {
-            position: fixed;
-            top: 0;
-            left: 0;
-            right: 0;
-            background: #E85A5A;
-            color: white;
-            padding: 8px;
-            text-align: center;
-            font-size: 14px;
-            font-weight: 500;
-            z-index: 9999;
-            transform: translateY(-100%);
-            transition: transform 0.3s ease;
+
+        .pdf-export-button:hover {
+            background: linear-gradient(135deg, #0D8B6F, #0A7A65);
+            transform: translateY(-1px);
         }
-        
-        .offline-indicator.show {
-            transform: translateY(0);
+
+        .pdf-export-button:disabled {
+            opacity: 0.7;
+            cursor: not-allowed;
+            transform: none;
         }
-        
-        /* Enhanced mobile styles */
-        @media (max-width: 767px) {
-            .stats-grid {
-                grid-template-columns: repeat(2, 1fr);
-                gap: 8px;
-            }
-            
-            .stat-value {
-                font-size: 24px;
-            }
-            
-            .header h1 {
-                font-size: 28px;
-            }
-            
-            /* Better touch targets on mobile */
-            .expand-btn, .refresh-btn {
-                min-height: 44px;
-            }
-            
-            .match-popup {
-                margin: 10px;
-                max-height: calc(100vh - 20px);
-            }
+
+        .loading-spinner {
+            display: none;
+            width: 16px;
+            height: 16px;
+            border: 2px solid #ffffff;
+            border-top: 2px solid transparent;
+            border-radius: 50%;
+            animation: spin 1s linear infinite;
         }
-        
-        /* Tablet styles */
-        @media (min-width: 768px) {
-            .container {
-                max-width: 768px;
-                margin: 0 auto;
-                padding: 24px;
-            }
-            
-            .stats-grid {
-                grid-template-columns: repeat(4, 1fr);
-                gap: 16px;
-            }
-            
-            .header h1 {
-                font-size: 40px;
-            }
-            
-            .stat-value {
-                font-size: 32px;
-            }
+
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
         }
-        
-        /* Desktop styles */
-        @media (min-width: 1024px) {
-            .container {
-                max-width: 1024px;
-                padding: 32px;
-            }
-            
-            .header h1 {
-                font-size: 48px;
-            }
-        }
-        
-        /* Print styles for PWA */
-        @media print {
+
+        /* PWA specific styles */
+        @media (display-mode: fullscreen) {
             body {
-                background: white;
-                color: black;
+                padding-top: env(safe-area-inset-top);
             }
             
-            .refresh-btn, .expand-btn, .install-banner {
-                display: none !important;
+            .container {
+                padding-top: 40px;
+            }
+        }
+
+        @media (display-mode: standalone) {
+            body {
+                padding-top: env(safe-area-inset-top);
+            }
+            
+            .container {
+                padding-top: 40px;
             }
         }
     </style>
 </head>
 <body>
     <div class="container">
-        <!-- Offline Indicator -->
-        <div id="offlineIndicator" class="offline-indicator">
-            📵 You're offline - Data may be outdated
-        </div>
-        
-        <div class="header">
-            <h1>Ticket Father Dashboard</h1>
-            <p>Season 2025 - 2026</p>
-        </div>
-        
-        <div class="stats-grid">
-            <div class="stat-card">
-                <div class="stat-value" id="totalTickets">0</div>
-                <div class="stat-label">Total Tickets</div>
-            </div>
-            <div class="stat-card available-tickets">
-                <div class="stat-value" id="availableTickets">0</div>
-                <div class="stat-label">Available Tickets</div>
-            </div>
-            <div class="stat-card">
-                <div class="stat-value" id="totalSpent">£0</div>
-                <div class="stat-label">Total Spent</div>
-            </div>
-            <div class="stat-card">
-                <div class="stat-value" id="netProfit">£0</div>
-                <div class="stat-label">Net Profit</div>
-            </div>
-        </div>
-        
-        <button class="refresh-btn" onclick="refreshDashboard()">Refresh Data</button>
-        
-        <div id="loadingMessage" class="loading" style="display: none;">
-            Loading latest data...
-        </div>
-        
-        <div id="loadingProgress" style="display: none;">
-            <div class="progress-container">
-                <div class="progress-bar" id="progressBar"></div>
-            </div>
-            <div class="progress-text" id="progressText">0%</div>
-        </div>
-        
-        <div class="section">
-            <div class="section-title">📅 Next 7 Days</div>
-            <div id="upcomingMatches"></div>
-        </div>
-        
-        <div class="separator"></div>
-        
-        <div id="teamsContainer"></div>
-        
-        <!-- PWA Install Banner -->
-        <div id="installBanner" class="install-banner">
-            <span>Add Ticket Father to your home screen!</span>
-            <button class="install-btn" onclick="installPWA()">Install</button>
-            <button class="install-banner-close" onclick="hideInstallBanner()">×</button>
-        </div>
-        
-        <!-- Match Popup Modal -->
-        <div id="matchPopupOverlay" class="match-popup-overlay" onclick="closeMatchPopup(event)">
-            <div class="match-popup" onclick="event.stopPropagation()">
-                <div class="match-popup-header">
-                    <div>
-                        <div class="match-popup-title" id="popupMatchTitle">Loading...</div>
-                        <div class="match-popup-date" id="popupMatchDate"></div>
-                    </div>
-                    <button class="close-btn" onclick="closeMatchPopup()">×</button>
+        <!-- Login Section -->
+        <div class="login-section" id="loginSection">
+            <div class="login-card">
+                <h1 class="app-title">📿 Salah Tracker</h1>
+                <p class="app-subtitle">Track your daily prayers with cloud sync</p>
+                
+                <div class="cloud-status offline" id="cloudStatus">📱 Loading...</div>
+                
+                <div class="error-message" id="errorMessage"></div>
+                <div class="success-message" id="successMessage"></div>
+                
+                <div class="form-group">
+                    <label class="form-label">Access Code</label>
+                    <input type="password" class="form-input" id="accessCode" placeholder="Enter your access code">
                 </div>
-                <div class="match-popup-content" id="matchPopupContent">
-                    <div class="match-loading">
-                        <div class="match-loading-spinner"></div>
-                        Loading match details...
+                
+                <button class="login-button" onclick="login()">Login</button>
+                
+                <div class="signup-section">
+                    <p style="color: #B8B8B8; margin-bottom: 12px;">Don't have an access code?</p>
+                    <button class="signup-button" onclick="showSignupModal()">Create New Profile</button>
+                </div>
+            </div>
+        </div>
+
+        <!-- Main Content -->
+        <div class="main-content" id="mainContent">
+            <div class="header">
+                <h1 class="main-title">📿 Salah Tracker</h1>
+                <div class="current-date" id="currentDate">Tuesday, July 21, 2025</div>
+                <div class="user-info" id="userInfo"></div>
+            </div>
+
+            <div class="stats-container">
+                <div class="stat-card missed" onclick="openStatsModal('missed')">
+                    <div class="stat-number" id="missedCount">0</div>
+                    <div class="stat-label">Missed</div>
+                </div>
+                <div class="stat-card qadha" onclick="openStatsModal('qadha')">
+                    <div class="stat-number" id="qadhaCount">0</div>
+                    <div class="stat-label">Qadha</div>
+                </div>
+            </div>
+
+            <div class="today-prayers">
+                <h2 class="section-title">Today's Salah</h2>
+                <div class="prayer-times" id="todayPrayers">
+                    <div class="prayer-row" data-prayer="fajr" onclick="openPrayerModal('fajr', 'Fajr')">
+                        <div class="prayer-info">
+                            <div class="prayer-icon">🌅</div>
+                            <div class="prayer-details">
+                                <h4>Fajr</h4>
+                                <p></p>
+                            </div>
+                        </div>
+                        <div class="prayer-status">Not Set</div>
                     </div>
+                    <div class="prayer-row" data-prayer="zuhr" onclick="openPrayerModal('zuhr', 'Zuhr')">
+                        <div class="prayer-info">
+                            <div class="prayer-icon">☀️</div>
+                            <div class="prayer-details">
+                                <h4>Zuhr</h4>
+                                <p></p>
+                            </div>
+                        </div>
+                        <div class="prayer-status">Not Set</div>
+                    </div>
+                    <div class="prayer-row" data-prayer="asr" onclick="openPrayerModal('asr', 'Asr')">
+                        <div class="prayer-info">
+                            <div class="prayer-icon">🌤️</div>
+                            <div class="prayer-details">
+                                <h4>Asr</h4>
+                                <p></p>
+                            </div>
+                        </div>
+                        <div class="prayer-status">Not Set</div>
+                    </div>
+                    <div class="prayer-row" data-prayer="maghrib" onclick="openPrayerModal('maghrib', 'Maghrib')">
+                        <div class="prayer-info">
+                            <div class="prayer-icon">🌆</div>
+                            <div class="prayer-details">
+                                <h4>Maghrib</h4>
+                                <p></p>
+                            </div>
+                        </div>
+                        <div class="prayer-status">Not Set</div>
+                    </div>
+                    <div class="prayer-row" data-prayer="isha" onclick="openPrayerModal('isha', 'Isha')">
+                        <div class="prayer-info">
+                            <div class="prayer-icon">🌙</div>
+                            <div class="prayer-details">
+                                <h4>Isha</h4>
+                                <p></p>
+                            </div>
+                        </div>
+                        <div class="prayer-status">Not Set</div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="monthly-view">
+                <div class="month-navigation">
+                    <button class="nav-arrow" id="prevMonth" onclick="changeMonth(-1)">‹</button>
+                    <h3 class="month-title" id="monthTitle">July 2025</h3>
+                    <button class="nav-arrow" id="nextMonth" onclick="changeMonth(1)">›</button>
+                </div>
+                <div class="calendar-container">
+                    <div class="calendar-grid" id="calendarGrid">
+                        <!-- Calendar will be generated here -->
+                    </div>
+                </div>
+            </div>
+
+            <div class="footer">
+                Track your daily salah and make up missed ones
+                <br>
+                <button onclick="showDataInfo()" class="data-management-button">
+                    Data Management
+                </button>
+                <button onclick="logout()" class="logout-button">Logout</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Install Prompt -->
+    <div id="installPrompt" class="install-prompt">
+        <div class="install-prompt-text">
+            📱 Install Salah Tracker as an app for quick access!
+        </div>
+        <div class="install-buttons">
+            <button class="install-btn" onclick="installApp()">Install</button>
+            <button class="install-btn dismiss" onclick="dismissInstall()">Maybe Later</button>
+        </div>
+    </div>
+
+    <!-- Prayer Status Modal -->
+    <div id="prayerModal" class="modal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h2 class="modal-title" id="modalTitle">Set Salah Status</h2>
+                <span class="close" onclick="closeModal('prayerModal')">&times;</span>
+            </div>
+            <div class="modal-options">
+                <button class="option-button prayed" onclick="setPrayerStatus('prayed')">✓ Prayed</button>
+                <button class="option-button missed" onclick="setPrayerStatus('missed')">✗ Missed</button>
+                <button class="option-button qadha" onclick="setPrayerStatus('qadha')">↻ Qadha</button>
+                <button class="option-button" onclick="clearPrayerStatus()" style="background: #2A2A2A; color: #B8B8B8; border-color: #3A3A3A; margin-top: 12px;">Clear</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Day Details Modal -->
+    <div id="dayModal" class="modal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h2 class="modal-title" id="dayModalTitle">Day Details</h2>
+                <span class="close" onclick="closeModal('dayModal')">&times;</span>
+            </div>
+            <div id="dayPrayersList">
+                <!-- Day prayers will be populated here -->
+            </div>
+        </div>
+    </div>
+
+    <!-- Stats Modal -->
+    <div id="statsModal" class="modal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h2 class="modal-title" id="statsModalTitle">Salah Statistics</h2>
+                <span class="close" onclick="closeModal('statsModal')">&times;</span>
+            </div>
+            <div class="stats-list" id="statsModalContent">
+                <!-- Stats content will be populated here -->
+            </div>
+        </div>
+    </div>
+
+    <!-- Data Info Modal -->
+    <div id="dataModal" class="modal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h2 class="modal-title">Data Management</h2>
+                <span class="close" onclick="closeModal('dataModal')">&times;</span>
+            </div>
+            <div style="color: #E6E6E6; line-height: 1.6;">
+                <div style="margin: 20px 0; display: flex; flex-direction: column; gap: 12px;">
+                    <button onclick="exportDataAsPDF()" class="pdf-export-button" id="pdfExportBtn">
+                        <div class="loading-spinner" id="pdfSpinner"></div>
+                        <span id="pdfBtnText">📄 Export as PDF Report</span>
+                    </button>
+                    <button onclick="clearData()" class="option-button" style="background: #FF4444; border-color: #FF4444; color: white;">
+                        🗑️ Clear All Data
+                    </button>
                 </div>
             </div>
         </div>
     </div>
-    
+
+    <!-- Signup Modal -->
+    <div id="signupModal" class="modal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h2 class="modal-title">Create New Profile</h2>
+                <span class="close" onclick="closeModal('signupModal')">&times;</span>
+            </div>
+            <div class="signup-form">
+                <div class="form-group">
+                    <label class="form-label">Name</label>
+                    <input type="text" class="form-input" id="signupName" placeholder="Enter your name">
+                </div>
+                <div class="form-group">
+                    <label class="form-label">Access Code</label>
+                    <input type="text" class="form-input" id="signupCode" placeholder="Create an access code">
+                </div>
+                <button class="login-button" onclick="createProfile()">Create Profile</button>
+            </div>
+        </div>
+    </div>
+
     <script>
-        // PWA Service Worker Registration
-        if ('serviceWorker' in navigator) {
-            window.addEventListener('load', async () => {
-                try {
-                    const registration = await navigator.serviceWorker.register('/sw.js');
-                    console.log('PWA: Service Worker registered', registration);
-                    
-                    // Check for updates
-                    registration.addEventListener('updatefound', () => {
-                        const newWorker = registration.installing;
-                        newWorker.addEventListener('statechange', () => {
-                            if (newWorker.state === 'installed' && navigator.serviceWorker.controller) {
-                                // New service worker available
-                                if (confirm('New version available! Reload to update?')) {
-                                    newWorker.postMessage({ type: 'SKIP_WAITING' });
-                                    window.location.reload();
-                                }
-                            }
-                        });
-                    });
-                } catch (error) {
-                    console.error('PWA: Service Worker registration failed', error);
-                }
-            });
-        }
-        
-        // Handle offline/online events
-        window.addEventListener('online', () => {
-            document.getElementById('offlineIndicator').classList.remove('show');
-            // Optionally refresh data when coming back online
-            if (confirm('You\'re back online! Refresh data?')) {
-                refreshDashboard();
-            }
-        });
-        
-        window.addEventListener('offline', () => {
-            document.getElementById('offlineIndicator').classList.add('show');
-        });
-        
+        // Global variables
+        let currentUser = null;
+        let currentUserProfile = null;
+        let currentFirebaseUser = null;
+        let prayerData = {};
+        let currentDisplayMonth = new Date().getMonth() + 1;
+        let currentDisplayYear = new Date().getFullYear();
+        let currentPrayer = null;
+        let currentDate = null;
+        let dataListener = null;
+        let isOfflineMode = false;
+
+        const prayers = ['fajr', 'zuhr', 'asr', 'maghrib', 'isha'];
+        const prayerNames = ['Fajr', 'Zuhr', 'Asr', 'Maghrib', 'Isha'];
+
         // PWA Install Prompt
         let deferredPrompt;
-        const installBanner = document.getElementById('installBanner');
-        
+        let installPromptShown = false;
+
+        // Make functions available globally
+        window.updateCloudStatus = function(status, message) {
+            const cloudStatus = document.getElementById('cloudStatus');
+            if (cloudStatus) {
+                cloudStatus.className = `cloud-status ${status}`;
+                cloudStatus.textContent = message;
+            }
+        };
+
+        window.currentUserProfile = null;
+        window.loadCloudData = loadCloudData;
+
+        // PWA functionality
         window.addEventListener('beforeinstallprompt', (e) => {
             e.preventDefault();
             deferredPrompt = e;
             
-            // Show install banner if not already installed
-            if (!window.matchMedia('(display-mode: standalone)').matches) {
-                installBanner.classList.add('show');
+            setTimeout(() => {
+                if (!installPromptShown && !localStorage.getItem('installPromptDismissed')) {
+                    showInstallPrompt();
+                }
+            }, 3000);
+        });
+
+        window.addEventListener('appinstalled', () => {
+            hideInstallPrompt();
+            localStorage.setItem('installPromptDismissed', 'true');
+        });
+
+        // Service Worker Registration
+        if ('serviceWorker' in navigator) {
+            window.addEventListener('load', function() {
+                navigator.serviceWorker.register('/sw.js')
+                    .then(function(registration) {
+                        console.log('ServiceWorker registration successful');
+                        
+                        // Check for updates periodically
+                        setInterval(() => {
+                            registration.update();
+                        }, 60000);
+                        
+                        // Handle updates
+                        registration.addEventListener('updatefound', () => {
+                            const newWorker = registration.installing;
+                            newWorker.addEventListener('statechange', () => {
+                                if (newWorker.state === 'installed' && navigator.serviceWorker.controller) {
+                                    // New service worker available
+                                    if (confirm('New version available! Reload to update?')) {
+                                        newWorker.postMessage({ type: 'SKIP_WAITING' });
+                                        window.location.reload();
+                                    }
+                                }
+                            });
+                        });
+                    })
+                    .catch(function(err) {
+                        console.log('ServiceWorker registration failed: ', err);
+                    });
+            });
+        }
+
+        // Handle online/offline status
+        window.addEventListener('online', () => {
+            if (window.firebaseReady) {
+                window.updateCloudStatus('connected', '☁️ Cloud Sync Active');
             }
         });
-        
-        function installPWA() {
+
+        window.addEventListener('offline', () => {
+            window.updateCloudStatus('offline', '📱 Offline Mode');
+        });
+
+        function showInstallPrompt() {
+            if (window.matchMedia('(display-mode: standalone)').matches) {
+                return;
+            }
+            
+            installPromptShown = true;
+            document.getElementById('installPrompt').classList.add('show');
+        }
+
+        function installApp() {
             if (deferredPrompt) {
                 deferredPrompt.prompt();
+                
                 deferredPrompt.userChoice.then((choiceResult) => {
                     if (choiceResult.outcome === 'accepted') {
                         console.log('User accepted the install prompt');
+                    } else {
+                        console.log('User dismissed the install prompt');
                     }
                     deferredPrompt = null;
-                    hideInstallBanner();
                 });
+            } else {
+                if (navigator.userAgent.includes('iPhone') || navigator.userAgent.includes('iPad')) {
+                    alert('To install:\n1. Tap the Share button\n2. Select "Add to Home Screen"');
+                } else {
+                    alert('To install:\nLook for the "Install" button in your browser\'s address bar');
+                }
             }
-        }
-        
-        function hideInstallBanner() {
-            installBanner.classList.remove('show');
-            // Store that user dismissed the banner
-            localStorage.setItem('installBannerDismissed', 'true');
-        }
-        
-        // Check if banner was previously dismissed
-        if (localStorage.getItem('installBannerDismissed') === 'true') {
-            installBanner.classList.remove('show');
-        }
-        
-        // Handle app installed
-        window.addEventListener('appinstalled', () => {
-            console.log('PWA installed');
-            hideInstallBanner();
-        });
-        
-        // Auto-hide banner after 30 seconds
-        setTimeout(() => {
-            if (installBanner.classList.contains('show')) {
-                hideInstallBanner();
-            }
-        }, 30000);
-        
-        // Refresh button function
-        function refreshDashboard() {
-            refreshData();
-        }
-        
-        // Handle URL shortcuts
-        if (window.location.hash === '#refresh') {
-            refreshDashboard();
-            window.location.hash = '';
-        } else if (window.location.hash === '#upcoming') {
-            setTimeout(() => {
-                document.getElementById('upcomingMatches').scrollIntoView({ behavior: 'smooth' });
-                window.location.hash = '';
-            }, 500);
-        }
-        
-        let dashboardData = {
-            totalTickets: 0,
-            availableTickets: 0,
-            totalSpent: 0,
-            totalSales: 0,
-            netProfit: 0,
-            teams: []
-        };
-        
-        // Cache for team sheet IDs to avoid repeated lookups
-        const teamSheetCache = new Map();
-        
-        // Add all your Google Sheets IDs here - the script will auto-discover all sheets in each document
-        const SHEET_IDS = [
-            '1Z18kzbG_KOEQK4r645aIEEc48ScgZBFW478dEKqjhck', // West Ham
-            '1EPwkWcVmAikgp7mFkek_2SSP-fwKMHYI6mysov5vlCk', // Burnley
-            '17uSJ3wdV8M3oW_bqLTOpLLC5dnyov-Ee5WTcR2sM2Ms', // Arsenal
-            '1Lkxf1_KGA30xMOgEygIHNaGuQdBPaLMxwXtEWMBJLUE', // Aston Villa
-            '1zeaq_GjpKdK7kYgQCgHIWTB_jfQl4seoWxsrsTWoNqQ', // Bournemouth
-            '1GbJ48f5EoQnDJw5WMjjmPr0Oy66sY1BuXdOb4NQNo2I', // Chelsea
-            '1DIb2AQVEoKFo8OSl_x1HhNDLSigu073r1O2qDbv7rm8', // Comedy
-            '1dlWwwyXcc53fgBW2Ib87foaTQElt7iZC0N9nW17njnw', // Cricket
-            '1YS2zI68QUxuPNR6RItEiSRefGBftJHb1aZON4OR_1Kk', // Darts
-            '1PW80ky6_UqbDzgbqy679BF6NbwHbLyXZJrEh761Xnp8', // England Int
-            '1w6Gvm_e9cS9Qef2Kn_wLMKxDlzxIrzWMgjipfCv3jS0', // Everton
-            '19ngBpgYAx4u7MGSc-e2yp_nAog7wf7rJM4vWs0rptfQ', // Nottingham Forest
-            '1_bPsrJNHXWnF2nRWYb7o9rH_aoXraC094G_d88RoCpA', // Fulham
-            '1K1Mst0IM--WXBA4-7JVF2wH2lfee6uQQPCKh2mYJy1Y', // Liverpool (Hospo)
-            '1X-CCXyujnmb2W2gtevgFUZuEIP-XEMeCYsZq_DBm6YE', // Manchester City
-            '1kKcKOdYiRL5WJRkDptG8XXWRy-LyuenPBMhKJpFE5D0', // Manchester United
-            '17V0wN1FQ52LxL7oLgwzudYJ8YEYNxyf7bvYm3lQ5JAc', // Newcastle
-            '11A1xlufizy7Hb3__JNnEe0pDR3oQH5bSUBJkyw2vwlg', // NFL Tottenham
-            '1RglR4HhWVllr5rS7XHVJsRhbqyqW90C83lJ1mtsHD5M', // Rugby Autumn
-            '1KxMZ-0LaSsXwUbQfO6o3ExMPZZlpMerBuDRl-opvrbA', // Rugby Six
-            '149WZcwKo2-Iz5TYK2lqMZJvXmOzyzeKjHY9Rztv-P_M', // Scotland Int
-            '1GuPuPNrh6ZFCFmwniaacp1_fFq-ijQP834-AfGlJweU', // Snooker
-            '17NY7MbUp7je1NWyw_9CqeCkjKbeGBcREKyIx3pyexe8', // Crystal Palace
-            '1nRXCX2koGjf3A06e6hg4aFvXmJ-ws_fzI6naxnwpP0E'  // Tottenham
-        ];
-        
-        const API_KEY = 'AIzaSyDb5oijZ2Zo-XG1YNKQygWDzJqZ7hkySrI';
-        
-        function formatCurrency(amount) {
-            return new Intl.NumberFormat('en-GB', {
-                style: 'currency',
-                currency: 'GBP',
-                minimumFractionDigits: 0
-            }).format(Math.abs(amount));
-        }
-        
-        function formatDate(dateStr) {
-            const [day, month, year] = dateStr.split('/');
-            const date = new Date(year, month - 1, day);
-            return date.toLocaleDateString('en-GB', { 
-                day: 'numeric', 
-                month: 'short' 
-            });
-        }
-        
-        function isWithinNextWeek(dateStr) {
-            const [day, month, year] = dateStr.split('/');
-            const matchDate = new Date(year, month - 1, day);
-            const today = new Date();
-            const sevenDaysFromNow = new Date(today.getTime() + 6 * 24 * 60 * 60 * 1000);
             
-            // Compare just the dates (no time)
-            const matchDateOnly = new Date(matchDate.getFullYear(), matchDate.getMonth(), matchDate.getDate());
-            const todayOnly = new Date(today.getFullYear(), today.getMonth(), today.getDate());
-            const endDateOnly = new Date(sevenDaysFromNow.getFullYear(), sevenDaysFromNow.getMonth(), sevenDaysFromNow.getDate());
-            
-            return matchDateOnly >= todayOnly && matchDateOnly <= endDateOnly;
+            hideInstallPrompt();
         }
 
-        // Enhanced formatName function for both team names and match names
-        function formatName(name) {
-            if (!name) return '';
+        function dismissInstall() {
+            hideInstallPrompt();
+            localStorage.setItem('installPromptDismissed', 'true');
+        }
+
+        function hideInstallPrompt() {
+            document.getElementById('installPrompt').classList.remove('show');
+        }
+
+        // Handle URL shortcuts
+        function handleUrlShortcuts() {
+            const hash = window.location.hash;
+            if (hash === '#today') {
+                // Scroll to today's prayers
+                setTimeout(() => {
+                    document.querySelector('.today-prayers').scrollIntoView({ behavior: 'smooth' });
+                }, 500);
+            } else if (hash === '#stats') {
+                // Show stats modal
+                setTimeout(() => {
+                    openStatsModal('missed');
+                }, 500);
+            }
+            // Clear the hash
+            window.location.hash = '';
+        }
+
+        // User management functions
+        function updateUserDisplay() {
+            const display = document.getElementById('userInfo');
             
-            // Remove "BOUGHT" and year patterns first
-            name = name.replace(/\s+BOUGHT\s+\d{2}-\d{2}$/i, '').trim();
-            name = name.replace(/\s+BOUGHT\s+\d{4}$/i, '').trim();
+            if (currentUserProfile) {
+                const userName = currentUserProfile.name || 'User';
+                display.textContent = `📱 ${userName}'s Salah Tracker`;
+                display.style.display = 'block';
+            } else {
+                display.style.display = 'none';
+            }
+        }
+
+        // Login/Signup functions
+        async function login() {
+            const accessCode = document.getElementById('accessCode').value.trim();
             
-            // Split into words
-            const words = name.split(/\s+/);
+            if (!accessCode) {
+                showError('Please enter an access code');
+                return;
+            }
             
-            // Process each word
-            const formattedWords = words.map(word => {
-                // Handle words with punctuation (like "Man.City")
-                if (word.includes('.')) {
-                    return word.split('.').map(part => formatSingleWord(part)).join('.');
+            try {
+                // Check if Firebase is available
+                if (window.firebaseReady && window.firebase && window.firebaseModules) {
+                    await loginWithFirebase(accessCode);
+                } else {
+                    await loginOffline(accessCode);
+                }
+            } catch (error) {
+                console.error('Login error:', error);
+                showError('Login failed: ' + error.message);
+            }
+        }
+
+        async function loginWithFirebase(accessCode) {
+            const { signInAnonymously } = window.firebaseModules;
+            const { auth } = window.firebase;
+            
+            const userCredential = await signInAnonymously(auth);
+            currentFirebaseUser = userCredential.user;
+            
+            const profiles = await checkProfiles(accessCode);
+            
+            if (!profiles || !profiles[accessCode]) {
+                showError('Invalid access code');
+                await auth.signOut();
+                return;
+            }
+            
+            currentUserProfile = {
+                accessCode: accessCode,
+                name: profiles[accessCode].name
+            };
+            
+            showMainApp();
+            window.updateCloudStatus('connected', '☁️ Cloud Sync Active');
+        }
+
+        async function loginOffline(accessCode) {
+            const offlineProfiles = JSON.parse(localStorage.getItem('offlineProfiles') || '{}');
+            const defaultProfiles = {
+                '190694': { name: 'Masum' },
+                'P455word': { name: 'Sam' }
+            };
+            
+            const allProfiles = { ...defaultProfiles, ...offlineProfiles };
+            
+            if (allProfiles[accessCode]) {
+                currentUserProfile = {
+                    accessCode: accessCode,
+                    name: allProfiles[accessCode].name
+                };
+                
+                showMainApp();
+                window.updateCloudStatus('offline', '📱 Offline Mode');
+            } else {
+                showError('Invalid access code');
+            }
+        }
+
+        async function checkProfiles(accessCode) {
+            try {
+                const { doc, getDoc, setDoc } = window.firebaseModules;
+                const { db } = window.firebase;
+                
+                const profilesDoc = await getDoc(doc(db, 'config', 'profiles'));
+                
+                if (!profilesDoc.exists()) {
+                    const defaultProfiles = {
+                        '190694': { name: 'Masum', created: new Date().toISOString() },
+                        'P455word': { name: 'Sam', created: new Date().toISOString() }
+                    };
+                    
+                    await setDoc(doc(db, 'config', 'profiles'), {
+                        profiles: defaultProfiles,
+                        lastUpdated: new Date().toISOString()
+                    });
+                    
+                    return defaultProfiles;
                 }
                 
-                return formatSingleWord(word);
+                return profilesDoc.data().profiles || {};
+            } catch (error) {
+                console.error('Error checking profiles:', error);
+                throw error;
+            }
+        }
+
+        function showSignupModal() {
+            document.getElementById('signupModal').style.display = 'block';
+            document.getElementById('signupName').value = '';
+            document.getElementById('signupCode').value = '';
+        }
+
+        async function createProfile() {
+            const name = document.getElementById('signupName').value.trim();
+            const accessCode = document.getElementById('signupCode').value.trim();
+            
+            if (!name || !accessCode) {
+                showError('Please fill in all fields');
+                return;
+            }
+            
+            if (accessCode.length < 6) {
+                showError('Access code must be at least 6 characters');
+                return;
+            }
+            
+            try {
+                if (window.firebaseReady && window.firebase && window.firebaseModules) {
+                    await createProfileWithFirebase(name, accessCode);
+                } else {
+                    await createProfileOffline(name, accessCode);
+                }
+            } catch (error) {
+                console.error('Error creating profile:', error);
+                showError('Failed to create profile: ' + error.message);
+            }
+        }
+
+        async function createProfileWithFirebase(name, accessCode) {
+            const { signInAnonymously } = window.firebaseModules;
+            const { auth } = window.firebase;
+            
+            if (!currentFirebaseUser) {
+                await signInAnonymously(auth);
+            }
+            
+            const { doc, getDoc, setDoc } = window.firebaseModules;
+            const { db } = window.firebase;
+            
+            const profilesDoc = await getDoc(doc(db, 'config', 'profiles'));
+            const existingProfiles = profilesDoc.exists() ? profilesDoc.data().profiles || {} : {};
+            
+            if (existingProfiles[accessCode]) {
+                showError('Access code already exists. Please choose a different one.');
+                return;
+            }
+            
+            existingProfiles[accessCode] = {
+                name: name,
+                created: new Date().toISOString()
+            };
+            
+            await setDoc(doc(db, 'config', 'profiles'), {
+                profiles: existingProfiles,
+                lastUpdated: new Date().toISOString()
             });
             
-            return formattedWords.join(' ');
+            closeModal('signupModal');
+            showSuccess(`Profile created! Your access code is: ${accessCode}`);
         }
-        
-        function formatSingleWord(word) {
-            if (!word) return '';
+
+        async function createProfileOffline(name, accessCode) {
+            const offlineProfiles = JSON.parse(localStorage.getItem('offlineProfiles') || '{}');
             
-            // Specific abbreviations/initials that should stay uppercase
-            const upperCaseWords = [
-                'FC', 'AFC', 'RFC', 'LFC', 'CFC', 'MUFC', 'MCFC', 'NUFC', 'QPR', 'MK',
-                'NFL', 'NHL', 'NBA', 'MLB', 'UTD', 'ENG', 'SCOT', 'INT', 'UK', 'US', 'USA',
-                'TV', 'BBC', 'ITV', 'SKY', 'BT', 'UEFA', 'FIFA', 'FA', 'PL', 'EFL',
-                'UEFA', 'FIFA', 'VAR', 'PSG', 'AC', 'AS', 'SS', 'CF', 'CD', 'SD', 'UD'
-            ];
-            
-            // Words that should be lowercase (except first letter if at start)
-            const lowerCaseWords = ['v', 'vs', 'versus', 'and', 'the', 'of', 'at', 'in', 'on', 'for', 'with'];
-            
-            const upperWord = word.toUpperCase();
-            const lowerWord = word.toLowerCase();
-            
-            if (upperCaseWords.includes(upperWord)) {
-                return upperWord;
+            if (offlineProfiles[accessCode]) {
+                showError('Access code already exists. Please choose a different one.');
+                return;
             }
             
-            if (lowerCaseWords.includes(lowerWord)) {
-                return lowerWord;
+            offlineProfiles[accessCode] = {
+                name: name,
+                created: new Date().toISOString()
+            };
+            
+            localStorage.setItem('offlineProfiles', JSON.stringify(offlineProfiles));
+            closeModal('signupModal');
+            showSuccess(`Profile created! Your access code is: ${accessCode} (offline mode)`);
+        }
+
+        function showMainApp() {
+            document.getElementById('loginSection').style.display = 'none';
+            document.getElementById('mainContent').style.display = 'block';
+            
+            updateUserDisplay();
+            loadUserData();
+            updateTodaysPrayers();
+            updateStats();
+            generateCalendar();
+            handleUrlShortcuts();
+        }
+
+        async function loadUserData() {
+            if (!currentUserProfile) return;
+            
+            // Always load from localStorage first
+            prayerData = JSON.parse(localStorage.getItem(`salahTracker_${currentUserProfile.accessCode}`) || '{}');
+            
+            // If Firebase is available, try to sync
+            if (window.firebaseReady && window.firebase && window.firebaseModules && currentFirebaseUser) {
+                await loadCloudData();
             }
             
-            // Otherwise, capitalize first letter and lowercase the rest
-            return word.charAt(0).toUpperCase() + word.slice(1).toLowerCase();
+            updateTodaysPrayers();
+            updateStats();
+            generateCalendar();
         }
-        
-        // Keep the original formatTeamName function for backward compatibility
-        function formatTeamName(teamName) {
-            return formatName(teamName);
-        }
-        
-        // New function specifically for match names
-        function formatMatchName(matchName) {
-            return formatName(matchName);
-        }
-        
-        function updateDashboard() {
-            document.getElementById('totalTickets').textContent = dashboardData.totalTickets;
-            document.getElementById('availableTickets').textContent = dashboardData.availableTickets;
-            document.getElementById('totalSpent').textContent = formatCurrency(dashboardData.totalSpent);
+
+        async function loadCloudData() {
+            if (!currentUserProfile || !window.firebase || !window.firebaseModules) return;
             
-            const profitElement = document.getElementById('netProfit');
-            const profitValue = dashboardData.netProfit;
-            const profitText = profitValue >= 0 ? `+${formatCurrency(profitValue)}` : `-${formatCurrency(profitValue)}`;
-            profitElement.textContent = profitText;
-            profitElement.className = profitValue >= 0 ? 'stat-value profit-positive' : 'stat-value profit-negative';
+            try {
+                const { doc, onSnapshot } = window.firebaseModules;
+                const { db } = window.firebase;
+                
+                if (dataListener) {
+                    dataListener();
+                }
+                
+                dataListener = onSnapshot(doc(db, 'prayerData', currentUserProfile.accessCode), (doc) => {
+                    if (doc.exists()) {
+                        const cloudData = doc.data() || {};
+                        // Merge cloud data with local data
+                        prayerData = { ...prayerData, ...cloudData };
+                        
+                        // Save merged data to localStorage
+                        localStorage.setItem(`salahTracker_${currentUserProfile.accessCode}`, JSON.stringify(prayerData));
+                    }
+                    updateTodaysPrayers();
+                    updateStats();
+                    generateCalendar();
+                }, (error) => {
+                    console.error('Error listening to cloud data:', error);
+                });
+                
+            } catch (error) {
+                console.error('Error loading cloud data:', error);
+            }
+        }
+
+        async function saveUserData() {
+            if (!currentUserProfile) return;
             
-            const allUpcomingMatches = [];
-            dashboardData.teams.forEach(team => {
-                team.matches.forEach(match => {
-                    if (isWithinNextWeek(match.date)) {
-                        allUpcomingMatches.push({
-                            ...match,
-                            teamEmoji: team.emoji,
-                            teamName: team.name
-                        });
+            // Always save to localStorage
+            localStorage.setItem(`salahTracker_${currentUserProfile.accessCode}`, JSON.stringify(prayerData));
+            
+            // If Firebase is available, also save to cloud
+            if (window.firebaseReady && window.firebase && window.firebaseModules && currentFirebaseUser) {
+                try {
+                    const { doc, setDoc } = window.firebaseModules;
+                    const { db } = window.firebase;
+                    
+                    await setDoc(doc(db, 'prayerData', currentUserProfile.accessCode), prayerData);
+                } catch (error) {
+                    console.error('Error saving to cloud:', error);
+                    // Continue using localStorage, don't block the operation
+                }
+            }
+        }
+
+        // Initialize app
+        function init() {
+            updateCurrentDate();
+            
+            // Always show login screen first
+            document.getElementById('loginSection').style.display = 'block';
+            document.getElementById('mainContent').style.display = 'none';
+        }
+
+        function updateCurrentDate() {
+            const now = new Date();
+            const dateStr = now.toLocaleDateString('en-US', {
+                weekday: 'long',
+                month: 'long',
+                day: 'numeric',
+                year: 'numeric'
+            });
+            const dateElement = document.getElementById('currentDate');
+            if (dateElement) {
+                dateElement.textContent = dateStr;
+            }
+        }
+
+        function getDateKey(date = new Date()) {
+            return `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, '0')}-${String(date.getDate()).padStart(2, '0')}`;
+        }
+
+        function updateTodaysPrayers() {
+            const today = getDateKey();
+            const todayData = prayerData[today] || {};
+
+            prayers.forEach(prayer => {
+                const row = document.querySelector(`[data-prayer="${prayer}"]`);
+                if (!row) return;
+                
+                const status = todayData[prayer] || 'not-set';
+                const statusElement = row.querySelector('.prayer-status');
+
+                row.classList.remove('prayed', 'missed', 'qadha');
+
+                switch (status) {
+                    case 'prayed':
+                        row.classList.add('prayed');
+                        statusElement.textContent = 'Prayed';
+                        break;
+                    case 'missed':
+                        row.classList.add('missed');
+                        statusElement.textContent = 'Missed';
+                        break;
+                    case 'qadha':
+                        row.classList.add('qadha');
+                        statusElement.textContent = 'Qadha';
+                        break;
+                    default:
+                        statusElement.textContent = 'Not Set';
+                }
+            });
+        }
+
+        function updateStats() {
+            let missedCount = 0;
+            let qadhaCount = 0;
+
+            Object.values(prayerData).forEach(dayData => {
+                Object.values(dayData).forEach(status => {
+                    if (status === 'missed') missedCount++;
+                    if (status === 'qadha') qadhaCount++;
+                });
+            });
+
+            const missedEl = document.getElementById('missedCount');
+            const qadhaEl = document.getElementById('qadhaCount');
+            
+            if (missedEl) missedEl.textContent = missedCount;
+            if (qadhaEl) qadhaEl.textContent = qadhaCount;
+        }
+
+        function openPrayerModal(prayer, prayerName) {
+            currentPrayer = prayer;
+            currentDate = null;
+            document.getElementById('modalTitle').textContent = `${prayerName} Salah`;
+            document.getElementById('prayerModal').style.display = 'block';
+        }
+
+        async function setPrayerStatus(status) {
+            if (!currentPrayer) return;
+
+            const dateKey = currentDate || getDateKey();
+            
+            if (!prayerData[dateKey]) {
+                prayerData[dateKey] = {};
+            }
+
+            prayerData[dateKey][currentPrayer] = status;
+            
+            await saveUserData();
+            updateTodaysPrayers();
+            updateStats();
+            generateCalendar();
+            closeModal('prayerModal');
+            
+            if (currentDate && currentDate !== getDateKey()) {
+                setTimeout(() => {
+                    const dayNumber = parseInt(currentDate.split('-')[2]);
+                    openDayModal(dayNumber);
+                }, 200);
+            }
+        }
+
+        async function clearPrayerStatus() {
+            if (!currentPrayer) return;
+
+            const dateKey = currentDate || getDateKey();
+            
+            if (prayerData[dateKey] && prayerData[dateKey][currentPrayer]) {
+                delete prayerData[dateKey][currentPrayer];
+                
+                if (Object.keys(prayerData[dateKey]).length === 0) {
+                    delete prayerData[dateKey];
+                }
+                
+                await saveUserData();
+                updateTodaysPrayers();
+                updateStats();
+                generateCalendar();
+                closeModal('prayerModal');
+                
+                if (currentDate && currentDate !== getDateKey()) {
+                    setTimeout(() => {
+                        const dayNumber = parseInt(currentDate.split('-')[2]);
+                        openDayModal(dayNumber);
+                    }, 200);
+                }
+            }
+        }
+
+        function openStatsModal(type) {
+            const modalTitle = document.getElementById('statsModalTitle');
+            const modalContent = document.getElementById('statsModalContent');
+            
+            modalTitle.textContent = type === 'missed' ? 'Missed Salah' : 'Qadha Salah';
+            modalContent.innerHTML = '';
+
+            const filteredPrayers = [];
+            Object.entries(prayerData).forEach(([date, dayData]) => {
+                Object.entries(dayData).forEach(([prayer, status]) => {
+                    if (status === type) {
+                        filteredPrayers.push({ date, prayer, status });
                     }
                 });
             });
+
+            if (filteredPrayers.length === 0) {
+                modalContent.innerHTML = '<div style="text-align: center; color: #B8B8B8; padding: 20px;">No salah found</div>';
+            } else {
+                const prayerOrder = { fajr: 0, zuhr: 1, asr: 2, maghrib: 3, isha: 4 };
+                
+                filteredPrayers.sort((a, b) => {
+                    const dateCompare = new Date(a.date) - new Date(b.date);
+                    if (dateCompare !== 0) return dateCompare;
+                    return prayerOrder[a.prayer] - prayerOrder[b.prayer];
+                });
+
+                filteredPrayers.forEach(({ date, prayer, status }) => {
+                    const dateObj = new Date(date);
+                    const dateStr = dateObj.toLocaleDateString('en-US', { 
+                        month: 'short', 
+                        day: 'numeric' 
+                    });
+                    
+                    const item = document.createElement('div');
+                    item.className = 'stats-item';
+                    
+                    if (status === 'missed') {
+                        item.innerHTML = `
+                            <span>${dateStr} - ${prayer.charAt(0).toUpperCase() + prayer.slice(1)}</span>
+                            <button class="qadha-button" onclick="makeQadha('${date}', '${prayer}')">Make Qadha</button>
+                        `;
+                    } else {
+                        item.innerHTML = `
+                            <span>${dateStr} - ${prayer.charAt(0).toUpperCase() + prayer.slice(1)}</span>
+                            <span style="color: #6366F1;">Completed</span>
+                        `;
+                    }
+                    
+                    modalContent.appendChild(item);
+                });
+            }
+
+            document.getElementById('statsModal').style.display = 'block';
+        }
+
+        async function makeQadha(date, prayer) {
+            if (prayerData[date] && prayerData[date][prayer] === 'missed') {
+                const prayerName = prayer.charAt(0).toUpperCase() + prayer.slice(1);
+                const dateObj = new Date(date);
+                const dateStr = dateObj.toLocaleDateString('en-US', { 
+                    month: 'long', 
+                    day: 'numeric' 
+                });
+                
+                if (confirm(`🤲 Qadha Confirmation\n\nAre you sure you prayed the ${prayerName} salah that you missed on ${dateStr}?\n\nThis will mark it as Qadha.`)) {
+                    prayerData[date][prayer] = 'qadha';
+                    await saveUserData();
+                    updateStats();
+                    updateTodaysPrayers();
+                    generateCalendar();
+                    closeModal('statsModal');
+                    setTimeout(() => openStatsModal('missed'), 100);
+                }
+            }
+        }
+
+        function generateCalendar() {
+            const grid = document.getElementById('calendarGrid');
+            const monthTitle = document.getElementById('monthTitle');
             
-            allUpcomingMatches.sort((a, b) => {
-                const dateA = new Date(a.date.split('/').reverse().join('/'));
-                const dateB = new Date(b.date.split('/').reverse().join('/'));
-                return dateA - dateB;
+            if (!grid || !monthTitle) return;
+            
+            const monthNames = ['January', 'February', 'March', 'April', 'May', 'June',
+                              'July', 'August', 'September', 'October', 'November', 'December'];
+            
+            monthTitle.textContent = `${monthNames[currentDisplayMonth - 1]} ${currentDisplayYear}`;
+            
+            grid.innerHTML = '';
+            
+            const dayHeaders = ['S', 'M', 'T', 'W', 'T', 'F', 'S'];
+            dayHeaders.forEach(header => {
+                const headerEl = document.createElement('div');
+                headerEl.className = 'day-header';
+                headerEl.textContent = header;
+                grid.appendChild(headerEl);
             });
             
-            const upcomingContainer = document.getElementById('upcomingMatches');
-            if (allUpcomingMatches.length === 0) {
-                upcomingContainer.innerHTML = '<div class="empty-state">No matches in the next 7 days</div>';
-            } else {
-                upcomingContainer.innerHTML = allUpcomingMatches.map((match, index) => `
-                    <div class="match-item clickable-match" onclick="openMatchPopup('${match.teamName}', '${match.name}', '${match.date}')">
-                        <div class="match-header">
-                            <div class="match-info">
-                                <div class="match-details-info">
-                                    <h3>${formatMatchName(match.name)}</h3>
-                                    <div class="match-date">${formatDate(match.date)}</div>
-                                </div>
-                            </div>
-                            <div class="tickets-status">
-                                <div class="tickets-count">${match.tickets}/${match.total}</div>
-                                <div class="tickets-label">available</div>
-                            </div>
-                        </div>
-                    </div>
-                `).join('');
+            const firstDay = new Date(currentDisplayYear, currentDisplayMonth - 1, 1);
+            const lastDay = new Date(currentDisplayYear, currentDisplayMonth, 0);
+            const daysInMonth = lastDay.getDate();
+            const startingDay = firstDay.getDay();
+            
+            for (let i = 0; i < startingDay; i++) {
+                const emptyDay = document.createElement('div');
+                emptyDay.className = 'calendar-day';
+                grid.appendChild(emptyDay);
             }
             
-            updateTeamsSections();
-        }
-        
-        function updateTeamsSections() {
-            const teamsContainer = document.getElementById('teamsContainer');
+            const today = new Date();
+            const isCurrentMonth = today.getFullYear() === currentDisplayYear && 
+                                  today.getMonth() + 1 === currentDisplayMonth;
+            const todayDate = today.getDate();
             
-            // Sort teams alphabetically by name
-            const sortedTeams = [...dashboardData.teams].sort((a, b) => a.name.localeCompare(b.name));
-            
-            teamsContainer.innerHTML = sortedTeams.map((team, sortedIndex) => `
-                <div class="section">
-                    <div class="team-header">
-                        <div class="team-name">
-                            <div class="team-emoji">${team.emoji}</div>
-                            <span>${team.name}</span>
-                        </div>
-                        <div class="team-summary">
-                            <div class="team-tickets">${team.totalTickets} tickets</div>
-                            <div class="team-spent">${formatCurrency(team.totalSpent)} spent</div>
-                            <div class="team-profit ${team.netProfit >= 0 ? 'profit-positive' : 'profit-negative'}">
-                                ${team.netProfit >= 0 ? '+' : '-'}${formatCurrency(team.netProfit)}
-                            </div>
-                        </div>
-                    </div>
+            for (let day = 1; day <= daysInMonth; day++) {
+                const dayEl = document.createElement('div');
+                dayEl.className = 'calendar-day';
+                dayEl.innerHTML = `<div>${day}</div>`;
+                
+                dayEl.style.cursor = 'pointer';
+                dayEl.addEventListener('click', function() {
+                    openDayModal(day);
+                });
+                
+                const dateKey = `${currentDisplayYear}-${String(currentDisplayMonth).padStart(2, '0')}-${String(day).padStart(2, '0')}`;
+                const dayData = prayerData[dateKey];
+                
+                if (dayData) {
+                    dayEl.classList.add('has-data');
+                    const indicators = document.createElement('div');
+                    indicators.className = 'day-indicators';
                     
-                    <button class="expand-btn" onclick="toggleTeamDetails(${sortedIndex})">
-                        <span id="expand-text-${sortedIndex}">Show Matches</span>
-                    </button>
-                    
-                    <div class="team-details collapsed" id="team-details-${sortedIndex}">
-                        ${team.matches.map((match, matchIndex) => `
-                            <div class="match-item clickable-match" onclick="openMatchPopup('${team.name}', '${match.name}', '${match.date}')">
-                                <div class="match-header">
-                                    <div class="match-info">
-                                        <div class="match-details-info">
-                                            <h3>${formatMatchName(match.name)}</h3>
-                                            <div class="match-date">${formatDate(match.date)}</div>
-                                        </div>
-                                    </div>
-                                    <div class="tickets-status">
-                                        <div class="tickets-count">${match.tickets}/${match.total}</div>
-                                        <div class="tickets-label">available</div>
-                                    </div>
-                                </div>
-                                <div class="match-details">
-                                    <div class="detail-item">
-                                        <div class="detail-label">Sold</div>
-                                        <div class="detail-value">${match.sold}</div>
-                                    </div>
-                                    <div class="detail-item">
-                                        <div class="detail-label">Spent</div>
-                                        <div class="detail-value">${formatCurrency(match.spent)}</div>
-                                    </div>
-                                    <div class="detail-item">
-                                        <div class="detail-label">Sales</div>
-                                        <div class="detail-value">${formatCurrency(match.sales)}</div>
-                                    </div>
-                                    <div class="detail-item">
-                                        <div class="detail-label">Profit</div>
-                                        <div class="detail-value ${match.profit >= 0 ? 'profit-positive' : 'profit-negative'}">
-                                            ${match.profit >= 0 ? '+' : '-'}${formatCurrency(match.profit)}
-                                        </div>
-                                    </div>
-                                </div>
-                            </div>
-                        `).join('')}
-                    </div>
-                </div>
-            `).join('');
-            
-            // Store sorted teams for the toggle function to use
-            window.sortedTeams = sortedTeams;
-        }
-        
-        function toggleTeamDetails(teamIndex) {
-            const detailsElement = document.getElementById(`team-details-${teamIndex}`);
-            const expandText = document.getElementById(`expand-text-${teamIndex}`);
-            const expandBtn = expandText.closest('.expand-btn');
-            
-            if (detailsElement.classList.contains('collapsed')) {
-                detailsElement.classList.remove('collapsed');
-                expandText.textContent = 'Hide Matches';
-                expandBtn.classList.add('hide-matches');
-            } else {
-                detailsElement.classList.add('collapsed');
-                expandText.textContent = 'Show Matches';
-                expandBtn.classList.remove('hide-matches');
-            }
-        }
-        
-        // Ultra-fast request function with aggressive optimizations
-        async function fastFetch(url, timeout = 3000, maxRetries = 2) {
-            for (let attempt = 1; attempt <= maxRetries; attempt++) {
-                try {
-                    const controller = new AbortController();
-                    const timeoutId = setTimeout(() => controller.abort(), timeout);
-                    
-                    const response = await fetch(url, { 
-                        signal: controller.signal,
-                        cache: 'no-cache',
-                        mode: 'cors'
+                    const statusCounts = { prayed: 0, missed: 0, qadha: 0 };
+                    Object.values(dayData).forEach(status => {
+                        if (statusCounts[status] !== undefined) {
+                            statusCounts[status]++;
+                        }
                     });
-                    clearTimeout(timeoutId);
                     
-                    if (!response.ok) {
-                        throw new Error(`HTTP ${response.status}`);
-                    }
+                    Object.entries(statusCounts).forEach(([status, count]) => {
+                        for (let i = 0; i < count; i++) {
+                            const indicator = document.createElement('div');
+                            indicator.className = `indicator ${status}`;
+                            indicators.appendChild(indicator);
+                        }
+                    });
                     
-                    return await response.json();
-                } catch (error) {
-                    if (attempt === maxRetries) {
-                        throw error;
-                    }
-                    // Much shorter wait before retry
-                    await new Promise(resolve => setTimeout(resolve, 200));
+                    dayEl.appendChild(indicators);
                 }
-            }
-        }
-        
-        async function getDocumentInfo(sheetId) {
-            const url = `https://sheets.googleapis.com/v4/spreadsheets/${sheetId}?key=${API_KEY}&fields=properties.title,sheets.properties.title`;
-            const data = await fastFetch(url, 3500);
-            return {
-                title: data.properties.title,
-                sheets: data.sheets || []
-            };
-        }
-        
-        async function fetchSheetData(sheetId, range = 'A1:H50') {
-            const url = `https://sheets.googleapis.com/v4/spreadsheets/${sheetId}/values/${range}?key=${API_KEY}&valueRenderOption=UNFORMATTED_VALUE&dateTimeRenderOption=FORMATTED_STRING`;
-            const data = await fastFetch(url, 3500);
-            return data.values || [];
-        }
-        
-        function parseSheetData(rows, sheetName, documentTitle) {
-            if (!rows || rows.length === 0) return null;
-            
-            let totalTickets = 0;
-            let totalSpent = 0;
-            let totalSales = 0;
-            let netProfit = 0;
-            
-            // Look for dashboard data in the sheet (first 10 rows for speed)
-            for (let i = 0; i < Math.min(rows.length, 10); i++) {
-                const row = rows[i];
-                if (!row || !row[1]) continue;
                 
-                const cell = row[1].toString().trim();
-                const value = row[2] ? row[2].toString().trim() : '';
-                
-                if (cell === 'TOTAL TICKETS') {
-                    totalTickets = parseInt(value) || 0;
-                } else if (cell === 'TOTAL SPENT (FV)') {
-                    totalSpent = parseFloat(value.replace(/[£,]/g, '')) || 0;
-                } else if (cell === 'TOTAL SALES') {
-                    totalSales = parseFloat(value.replace(/[£,]/g, '')) || 0;
-                } else if (cell === 'NET PROFIT') {
-                    netProfit = parseFloat(value.replace(/[£,]/g, '')) || 0;
+                if (isCurrentMonth && day === todayDate) {
+                    dayEl.classList.add('today');
                 }
-            }
-            
-            // If no dashboard data found, this might be a match sheet, skip it
-            if (totalTickets === 0 && totalSpent === 0) {
-                return null;
-            }
-            
-            const matches = [];
-            
-            // Start from row 12 (index 11) and go through all rows - FIXED COLUMN REFERENCES
-            for (let i = 11; i < rows.length; i++) {
-                const row = rows[i];
-                if (!row || !row[1]) continue; // Check column B for match names
                 
-                const matchName = row[1].toString().trim(); // Column B (MATCH)
-                
-                // Skip header rows and empty rows
-                if (matchName === '' || matchName.toLowerCase().includes('match')) continue;
-                
-                // If there's any meaningful content in the match name column, treat it as a match
-                if (matchName.length > 3) {
-                    const matchDate = row[2] ? row[2].toString().trim() : '01/08/2025'; // Column C (DATE)
-                    
-                    // Column D - "AVAILABLE / TICKETS" 
-                    const ticketsCell = row[3] ? row[3].toString().trim() : '';
-                    let availableTickets = 0;
-                    let totalTickets = 0;
-                    
-                    if (ticketsCell.includes('/')) {
-                        const parts = ticketsCell.split('/');
-                        availableTickets = parseInt(parts[0]) || 0;
-                        totalTickets = parseInt(parts[1]) || 0;
-                    } else {
-                        // Just a number
-                        availableTickets = parseInt(ticketsCell.replace(/[^\d]/g, '')) || 0;
-                        totalTickets = availableTickets;
-                    }
-                    
-                    const spent = parseFloat(row[4]?.toString().replace(/[£,]/g, '')) || 0; // Column E - "SPENT (FV)"
-                    const sales = parseFloat(row[5]?.toString().replace(/[£,]/g, '')) || 0; // Column F - "SALES"
-                    const profit = parseFloat(row[6]?.toString().replace(/[£,]/g, '')) || (sales - spent); // Column G - "NET PROFIT"
-                    
-                    // Only add if we have meaningful data (either tickets or money spent)
-                    if (totalTickets > 0 || spent > 0) {
-                        const soldTickets = totalTickets - availableTickets;
-                        
-                        matches.push({
-                            name: matchName, // Will be formatted when displayed
-                            date: matchDate,
-                            tickets: availableTickets,  // Available tickets
-                            total: totalTickets,        // Total tickets
-                            sold: soldTickets,          // Sold tickets
-                            spent: spent,
-                            sales: sales,
-                            profit: profit
-                        });
-                    }
-                }
+                grid.appendChild(dayEl);
             }
-            
-            // Use document title as team name, fall back to sheet name
-            let teamName = documentTitle || sheetName;
-            
-            // Format the team name with smart capitalization
-            teamName = formatTeamName(teamName);
-            
-            return {
-                name: teamName,
-                emoji: getTeamEmoji(teamName),
-                totalTickets: totalTickets,
-                totalSpent: totalSpent,
-                totalSales: totalSales,
-                netProfit: netProfit,
-                matches: matches
-            };
         }
-        
-        function getTeamEmoji(teamName) {
-            const emojiMap = {
-                // Premier League teams
-                'arsenal': '💣',
-                'aston villa': '🐯',
-                'burnley': '🔥',
-                'bournemouth': '🏐',
-                'chelsea': '🦁',
-                'everton': '🏰',
-                'forest': '🌳',
-                'nottingham forest': '🌳',
-                'liverpool': '🐦‍🔥',
-                'man city': '⛴️',
-                'manchester city': '⛴️',
-                'man utd': '👹',
-                'manchester united': '👹',
-                'newcastle': '🐎',
-                'spurs': '🐦‍⬛',
-                'tottenham': '🐦‍⬛',
-                'west ham': '⚒️',
-                'fulham': '⚪',
-                'crystal palace': '🦅',
-                
-                // Sports and Events
-                'comedy': '🎭',
-                'theatre': '🎭',
-                'cricket': '🏏',
-                'darts': '🎯',
-                'eng int': '🏴󠁧󠁢󠁥󠁮󠁧󠁿',
-                'england': '🏴󠁧󠁢󠁥󠁮󠁧󠁿',
-                'nfl': '🏈',
-                'rugby autumn nations': '🍁',
-                'autumn nations': '🍁',
-                'rugby six nations': '🏟️',
-                'six nations': '🏟️',
-                'rugby': '🏟️',
-                'scot int': '🏴󠁧󠁢󠁳󠁣󠁴󠁿',
-                'scotland': '🏴󠁧󠁢󠁳󠁣󠁴󠁿',
-                'snooker': '🎱'
-            };
+
+        function openDayModal(day) {
+            const dateKey = `${currentDisplayYear}-${String(currentDisplayMonth).padStart(2, '0')}-${String(day).padStart(2, '0')}`;
+            const dayData = prayerData[dateKey] || {};
             
-            const lowerName = teamName.toLowerCase();
+            const date = new Date(currentDisplayYear, currentDisplayMonth - 1, day);
+            const dateStr = date.toLocaleDateString('en-US', {
+                weekday: 'long',
+                month: 'long',
+                day: 'numeric',
+                year: 'numeric'
+            });
             
-            // Check for exact matches first
-            if (emojiMap[lowerName]) {
-                return emojiMap[lowerName];
-            }
+            document.getElementById('dayModalTitle').textContent = dateStr;
             
-            // Check for partial matches
-            for (const [key, emoji] of Object.entries(emojiMap)) {
-                if (lowerName.includes(key)) {
-                    return emoji;
-                }
-            }
+            const prayersList = document.getElementById('dayPrayersList');
+            prayersList.innerHTML = '';
             
-            return '⚽'; // Default football emoji
-        }
-        
-        // Match Popup Functions
-        async function openMatchPopup(teamName, matchName, matchDate) {
-            const overlay = document.getElementById('matchPopupOverlay');
-            const popupTitle = document.getElementById('popupMatchTitle');
-            const popupDate = document.getElementById('popupMatchDate');
-            const popupContent = document.getElementById('matchPopupContent');
-            
-            // Show popup with loading state
-            popupTitle.textContent = formatMatchName(matchName);
-            popupDate.textContent = formatDate(matchDate);
-            popupContent.innerHTML = `
-                <div class="match-loading">
-                    <div class="match-loading-spinner"></div>
-                    Loading match details...
-                </div>
+            const prayerContainer = document.createElement('div');
+            prayerContainer.style.cssText = `
+                background: #1F1F1F;
+                border-radius: 16px;
+                overflow: hidden;
+                border: 1px solid #2E2E2E;
             `;
-            overlay.style.display = 'flex';
             
-            try {
-                console.log(`🎯 Opening match popup for: "${teamName}" - "${matchName}"`);
+            prayers.forEach((prayer, index) => {
+                const status = dayData[prayer] || 'not-set';
+                const prayerName = prayer.charAt(0).toUpperCase() + prayer.slice(1);
                 
-                // First, check if we have the team sheet ID cached
-                let teamSheetId = teamSheetCache.get(teamName);
+                const prayerItem = document.createElement('div');
+                prayerItem.className = 'prayer-row';
                 
-                if (!teamSheetId) {
-                    console.log(`💾 No cached sheet ID for "${teamName}", searching...`);
-                    
-                    // Show more specific loading message
-                    popupContent.innerHTML = `
-                        <div class="match-loading">
-                            <div class="match-loading-spinner"></div>
-                            Finding team sheet...
-                        </div>
-                    `;
-                    
-                    teamSheetId = await findTeamSheetId(teamName);
-                    
-                    if (teamSheetId) {
-                        teamSheetCache.set(teamName, teamSheetId);
-                        console.log(`💾 Cached sheet ID for "${teamName}": ${teamSheetId}`);
+                let statusText = 'Not Set';
+                let statusClass = '';
+                
+                switch (status) {
+                    case 'prayed':
+                        statusText = 'Prayed';
+                        statusClass = 'prayed';
+                        break;
+                    case 'missed':
+                        statusText = 'Missed';
+                        statusClass = 'missed';
+                        break;
+                    case 'qadha':
+                        statusText = 'Qadha';
+                        statusClass = 'qadha';
+                        break;
+                }
+                
+                if (statusClass) {
+                    prayerItem.classList.add(statusClass);
+                }
+                
+                if (index < prayers.length - 1) {
+                    prayerItem.style.borderBottom = '1px solid #2E2E2E';
+                    if (statusClass) {
+                        prayerItem.style.borderBottom = '1px solid rgba(255, 255, 255, 0.1)';
                     }
                 }
                 
-                if (!teamSheetId) {
-                    throw new Error(`Could not find spreadsheet for team "${teamName}". The team may not have a dedicated sheet yet.`);
-                }
-                
-                // Update loading message
-                popupContent.innerHTML = `
-                    <div class="match-loading">
-                        <div class="match-loading-spinner"></div>
-                        Loading match data...
+                prayerItem.innerHTML = `
+                    <div class="prayer-info">
+                        <div class="prayer-icon">${getPrayerIcon(prayer)}</div>
+                        <div class="prayer-details">
+                            <h4>${prayerName}</h4>
+                            <p></p>
+                        </div>
                     </div>
+                    <div class="prayer-status">${statusText}</div>
                 `;
                 
-                // Load the specific match sheet
-                const matchData = await loadMatchDetails(teamSheetId, matchName);
+                prayerItem.addEventListener('click', function() {
+                    currentPrayer = prayer;
+                    currentDate = dateKey;
+                    document.getElementById('modalTitle').textContent = `${prayerName} Salah`;
+                    closeModal('dayModal');
+                    document.getElementById('prayerModal').style.display = 'block';
+                });
                 
-                // Display the match data
-                displayMatchDetails(matchData, matchName);
-                
-            } catch (error) {
-                console.error('❌ Error loading match details:', error);
-                
-                // Show user-friendly error message with retry option
-                popupContent.innerHTML = `
-                    <div class="match-loading">
-                        <div style="color: #ff3b30; margin-bottom: 16px;">❌ ${error.message}</div>
-                        <button onclick="openMatchPopup('${teamName}', '${matchName}', '${matchDate}')" 
-                                style="background: #007aff; color: white; border: none; padding: 12px 24px; border-radius: 8px; cursor: pointer;">
-                            Try Again
-                        </button>
-                        <div style="margin-top: 12px; font-size: 14px; color: #8e8e93;">
-                            If this continues, the match sheet may not exist yet or there may be a connection issue.
-                        </div>
-                    </div>
-                `;
-            }
+                prayerContainer.appendChild(prayerItem);
+            });
+            
+            prayersList.appendChild(prayerContainer);
+            document.getElementById('dayModal').style.display = 'block';
         }
-        
-        function closeMatchPopup(event) {
-            if (event && event.target !== event.currentTarget) return;
-            document.getElementById('matchPopupOverlay').style.display = 'none';
-        }
-        
-        async function findTeamSheetId(teamName) {
-            console.log(`🔍 Finding sheet ID for team: "${teamName}"`);
-            
-            // Try to find the sheet ID by checking each one for the team name
-            for (let i = 0; i < SHEET_IDS.length; i++) {
-                const sheetId = SHEET_IDS[i];
-                try {
-                    console.log(`📋 Checking sheet ${i + 1}/${SHEET_IDS.length}: ${sheetId}`);
-                    
-                    const documentInfo = await fastFetch(
-                        `https://sheets.googleapis.com/v4/spreadsheets/${sheetId}?key=${API_KEY}&fields=properties.title`,
-                        4000, // Shorter timeout
-                        1     // Single attempt only to speed up
-                    );
-                    
-                    const documentTitle = documentInfo.properties.title;
-                    const formattedTitle = formatTeamName(documentTitle);
-                    
-                    console.log(`📄 Document title: "${documentTitle}" -> Formatted: "${formattedTitle}"`);
-                    
-                    // Try multiple matching strategies
-                    if (formattedTitle === teamName ||
-                        formattedTitle.toLowerCase() === teamName.toLowerCase() ||
-                        formattedTitle.toLowerCase().includes(teamName.toLowerCase()) ||
-                        teamName.toLowerCase().includes(formattedTitle.toLowerCase())) {
-                        
-                        console.log(`✅ Found matching sheet for "${teamName}": ${sheetId}`);
-                        return sheetId;
-                    }
-                    
-                } catch (error) {
-                    console.log(`❌ Error checking sheet ${i + 1}: ${error.message}`);
-                    continue;
-                }
-                
-                // Minimal delay between requests to avoid rate limiting
-                if (i < SHEET_IDS.length - 1) {
-                    await new Promise(resolve => setTimeout(resolve, 50));
-                }
-            }
-            
-            console.log(`❌ No sheet found for team: "${teamName}"`);
-            return null;
-        }
-        
-        async function loadMatchDetails(sheetId, matchName) {
-            try {
-                console.log(`🔍 Loading match details for: "${matchName}"`);
-                
-                // Get all sheet names first
-                const documentInfo = await getDocumentInfo(sheetId);
-                const sheets = documentInfo.sheets || [];
-                
-                console.log(`📋 Available sheets:`, sheets.map(s => s.properties.title));
-                
-                // Find the sheet that matches the match name (case insensitive, partial match)
-                let matchSheetName = null;
-                const searchName = matchName.toLowerCase().trim();
-                
-                // Try multiple matching strategies in order of preference
-                const matchingStrategies = [
-                    // 1. Exact match (case insensitive)
-                    (sheetTitle) => sheetTitle.toLowerCase() === searchName,
-                    
-                    // 2. Sheet contains match name
-                    (sheetTitle) => sheetTitle.toLowerCase().includes(searchName),
-                    
-                    // 3. Match name contains sheet title
-                    (sheetTitle) => searchName.includes(sheetTitle.toLowerCase()),
-                    
-                    // 4. Remove spaces and try again
-                    (sheetTitle) => sheetTitle.toLowerCase().replace(/\s+/g, '').includes(searchName.replace(/\s+/g, '')),
-                    
-                    // 5. Remove common words and try partial match
-                    (sheetTitle) => {
-                        const cleanSheet = sheetTitle.toLowerCase().replace(/\b(vs|v|against|home|away)\b/g, '').trim();
-                        const cleanMatch = searchName.replace(/\b(vs|v|against|home|away)\b/g, '').trim();
-                        return cleanSheet.includes(cleanMatch) || cleanMatch.includes(cleanSheet);
-                    },
-                    
-                    // 6. Try team name extraction (look for team names in both)
-                    (sheetTitle) => {
-                        const teamNames = ['arsenal', 'spurs', 'tottenham', 'utd', 'united', 'city', 'liverpool', 'chelsea'];
-                        const sheetTeams = teamNames.filter(team => sheetTitle.toLowerCase().includes(team));
-                        const matchTeams = teamNames.filter(team => searchName.includes(team));
-                        return sheetTeams.some(team => matchTeams.includes(team));
-                    }
-                ];
-                
-                // Try each strategy
-                for (const strategy of matchingStrategies) {
-                    for (const sheet of sheets) {
-                        const sheetTitle = sheet.properties.title;
-                        
-                        // Skip dashboard and summary sheets
-                        if (sheetTitle.toLowerCase().includes('dashboard') || 
-                            sheetTitle.toLowerCase().includes('summary')) {
-                            continue;
-                        }
-                        
-                        if (strategy(sheetTitle)) {
-                            matchSheetName = sheetTitle;
-                            console.log(`✅ Found match using strategy: "${sheetTitle}"`);
-                            break;
-                        }
-                    }
-                    if (matchSheetName) break;
-                }
-                
-                // If still no match, try the first non-dashboard sheet
-                if (!matchSheetName) {
-                    console.log(`⚠️ No direct match found, trying first available sheet...`);
-                    for (const sheet of sheets) {
-                        const sheetTitle = sheet.properties.title.toLowerCase();
-                        if (!sheetTitle.includes('dashboard') && !sheetTitle.includes('summary')) {
-                            matchSheetName = sheet.properties.title;
-                            console.log(`📄 Using first available sheet: "${matchSheetName}"`);
-                            break;
-                        }
-                    }
-                }
-                
-                if (!matchSheetName) {
-                    throw new Error(`No suitable sheet found. Available sheets: ${sheets.map(s => s.properties.title).join(', ')}`);
-                }
-                
-                console.log(`📊 Loading data from sheet: "${matchSheetName}"`);
-                
-                // Fetch the match sheet data with optimized timeout
-                const range = `'${matchSheetName}'!A1:L100`;
-                const sheetData = await fastFetch(
-                    `https://sheets.googleapis.com/v4/spreadsheets/${sheetId}/values/${range}?key=${API_KEY}&valueRenderOption=UNFORMATTED_VALUE&dateTimeRenderOption=FORMATTED_STRING`,
-                    6000, // Reasonable timeout for individual sheets
-                    2     // Balanced retries
-                );
-                
-                if (!sheetData || !sheetData.values || sheetData.values.length === 0) {
-                    throw new Error(`No data found in sheet "${matchSheetName}"`);
-                }
-                
-                return parseMatchSheetData(sheetData.values);
-                
-            } catch (error) {
-                console.error('❌ Load match details error:', error);
-                
-                // Provide more helpful error messages
-                if (error.message.includes('HTTP 429')) {
-                    throw new Error('Too many requests. Please wait a moment and try again.');
-                } else if (error.message.includes('HTTP 403')) {
-                    throw new Error('Access denied to this sheet. Please check permissions.');
-                } else if (error.message.includes('HTTP 404')) {
-                    throw new Error('Sheet not found. It may have been moved or deleted.');
-                } else if (error.message.includes('timeout') || error.message.includes('fetch')) {
-                    throw new Error('Connection timeout. Please check your internet and try again.');
-                } else {
-                    throw new Error(`Failed to load match details: ${error.message}`);
-                }
-            }
-        }
-        
-        function parseMatchSheetData(rows) {
-            if (!rows || rows.length === 0) {
-                throw new Error('No data found in match sheet');
-            }
-            
-            console.log('=== PARSING MATCH SHEET ===');
-            console.log('Total rows:', rows.length);
-            
-            const tickets = [];
-            let totalFV = 0;
-            let totalSales = 0;
-            
-            // Track merged cell values
-            let currentBoughtBy = '';
-            let currentPaidVia = '';
-            let currentNumTickets = '';
-            let currentNameEmail = '';
-            let currentBlock = '';
-            let currentRow = '';
-            
-            // Start from row 4 (index 3) as specified
-            for (let i = 3; i < rows.length; i++) {
-                const row = rows[i];
-                if (!row || row.length < 8) {
-                    console.log(`Row ${i + 1}: Too short, skipping`);
-                    continue;
-                }
-                
-                console.log(`\n--- Row ${i + 1} ---`);
-                console.log('Raw data:', row);
-                
-                // Extract cell values - CORRECTED COLUMN MAPPING
-                const boughtBy = row[0] ? row[0].toString().trim() : '';
-                const fvRaw = row[2] ? row[2].toString().trim() : ''; // FV is in column C (index 2)
-                const paidVia = row[3] ? row[3].toString().trim() : '';
-                const numTickets = row[4] ? row[4].toString().trim() : '';
-                const nameEmail = row[5] ? row[5].toString().trim() : '';
-                const block = row[6] ? row[6].toString().trim() : '';
-                const rowNum = row[7] ? row[7].toString().trim() : '';
-                const seat = row[8] ? row[8].toString().trim() : '';
-                const soldForRaw = row[11] ? row[11].toString().trim() : ''; // SOLD FOR is in column L (index 11)
-                
-                console.log(`FV Raw: "${fvRaw}"`);
-                console.log(`Seat: "${seat}"`);
-                console.log(`Sold For Raw: "${soldForRaw}"`);
-                
-                // Update merged cell values when present
-                if (boughtBy) currentBoughtBy = boughtBy;
-                if (paidVia) currentPaidVia = paidVia;
-                if (numTickets) currentNumTickets = numTickets;
-                if (nameEmail) currentNameEmail = nameEmail;
-                if (block) currentBlock = block;
-                if (rowNum) currentRow = rowNum;
-                
-                // Parse FV - much simpler approach
-                let fv = 0;
-                if (fvRaw) {
-                    // Just try to parse the number directly, handling the long decimals
-                    const numValue = parseFloat(fvRaw.replace(/[£,\s]/g, ''));
-                    console.log(`Parsed number: ${numValue}`);
-                    
-                    if (!isNaN(numValue) && numValue > 0) {
-                        // Round to 2 decimal places
-                        fv = Math.round(numValue * 100) / 100;
-                        console.log(`✅ Final FV: £${fv}`);
-                    } else {
-                        console.log(`❌ Invalid number: ${numValue}`);
-                    }
-                }
-                
-                // Skip if no valid FV
-                if (fv === 0) {
-                    console.log('❌ No valid FV, skipping');
-                    continue;
-                }
-                
-                // Parse sold for amount
-                let soldFor = 0;
-                if (soldForRaw) {
-                    const soldValue = parseFloat(soldForRaw.replace(/[£,\s]/g, ''));
-                    if (!isNaN(soldValue) && soldValue > 0) {
-                        soldFor = Math.round(soldValue * 100) / 100;
-                        console.log(`💰 Sold for: £${soldFor}`);
-                    }
-                }
-                
-                // Determine status
-                let status = 'Available';
-                if (soldFor > 0) {
-                    status = 'Sold';
-                }
-                
-                // Create ticket
-                const ticket = {
-                    boughtBy: currentBoughtBy || 'Unknown',
-                    fv: fv,
-                    paidVia: currentPaidVia,
-                    nameEmail: currentNameEmail,
-                    block: currentBlock,
-                    row: currentRow,
-                    seat: seat,
-                    status: status,
-                    soldFor: soldFor
-                };
-                
-                console.log('🎫 Created ticket:', ticket);
-                
-                tickets.push(ticket);
-                totalFV += fv;
-                totalSales += soldFor;
-                
-                console.log(`✅ Added! Total tickets: ${tickets.length}`);
-            }
-            
-            console.log('\n=== FINAL RESULT ===');
-            console.log(`Tickets found: ${tickets.length}`);
-            console.log(`Total FV: £${totalFV}`);
-            console.log(`Total Sales: £${totalSales}`);
-            
-            if (tickets.length === 0) {
-                console.log('\n❌ NO TICKETS CREATED - Let me check why...');
-                
-                // Let's see what we got in rows 4-10
-                for (let i = 3; i < Math.min(rows.length, 10); i++) {
-                    const row = rows[i];
-                    console.log(`Row ${i + 1} detail check:`);
-                    console.log(`  - Raw FV (col C): "${row[2]}"`); // Changed from row[1] to row[2]
-                    console.log(`  - Type: ${typeof row[2]}`);
-                    console.log(`  - parseFloat result: ${parseFloat(row[2])}`);
-                    console.log(`  - isNaN check: ${isNaN(parseFloat(row[2]))}`);
-                }
-                
-                throw new Error('No ticket data found. Check console for detailed analysis.');
-            }
-            
-            return {
-                tickets,
-                summary: {
-                    totalTickets: tickets.length,
-                    totalFV,
-                    totalSales,
-                    profit: totalSales - totalFV,
-                    soldTickets: tickets.filter(t => t.status === 'Sold').length,
-                    availableTickets: tickets.filter(t => t.status === 'Available').length,
-                    listedTickets: tickets.filter(t => t.status === 'Listed').length
-                }
+
+        function getPrayerIcon(prayer) {
+            const icons = {
+                'fajr': '🌅',
+                'zuhr': '☀️',
+                'asr': '🌤️',
+                'maghrib': '🌆',
+                'isha': '🌙'
             };
+            return icons[prayer] || '🕌';
         }
-        
-        function displayMatchDetails(matchData, matchName) {
-            const popupContent = document.getElementById('matchPopupContent');
-            const { tickets, summary } = matchData;
+
+        function changeMonth(direction) {
+            currentDisplayMonth += direction;
             
-            popupContent.innerHTML = `
-                <div class="match-stats-grid">
-                    <div class="match-stat-card">
-                        <div class="match-stat-value">${summary.totalTickets}</div>
-                        <div class="match-stat-label">Total Tickets</div>
-                    </div>
-                    <div class="match-stat-card">
-                        <div class="match-stat-value">${summary.soldTickets}</div>
-                        <div class="match-stat-label">Sold</div>
-                    </div>
-                    <div class="match-stat-card">
-                        <div class="match-stat-value">${summary.availableTickets}</div>
-                        <div class="match-stat-label">Available</div>
-                    </div>
-                    <div class="match-stat-card">
-                        <div class="match-stat-value">${formatCurrency(summary.totalFV)}</div>
-                        <div class="match-stat-label">Total FV</div>
-                    </div>
-                    <div class="match-stat-card">
-                        <div class="match-stat-value">${formatCurrency(summary.totalSales)}</div>
-                        <div class="match-stat-label">Total Sales</div>
-                    </div>
-                    <div class="match-stat-card">
-                        <div class="match-stat-value ${summary.profit >= 0 ? 'profit-positive' : 'profit-negative'}">
-                            ${summary.profit >= 0 ? '+' : '-'}${formatCurrency(summary.profit)}
-                        </div>
-                        <div class="match-stat-label">Profit</div>
-                    </div>
-                </div>
-                
-                <div class="tickets-chart-container">
-                    <div class="chart-title">Ticket Details</div>
-                    <div style="overflow-x: auto;">
-                        <table class="tickets-table">
-                            <thead>
-                                <tr>
-                                    <th>FV</th>
-                                    <th>Block</th>
-                                    <th>Row</th>
-                                    <th>Seat</th>
-                                    <th>Status</th>
-                                    <th>Sold For</th>
-                                </tr>
-                            </thead>
-                            <tbody>
-                                ${tickets.map(ticket => `
-                                    <tr>
-                                        <td>${formatCurrency(ticket.fv)}</td>
-                                        <td>${ticket.block}</td>
-                                        <td>${ticket.row}</td>
-                                        <td>${ticket.seat}</td>
-                                        <td class="status-${ticket.status.toLowerCase()}">${ticket.status}</td>
-                                        <td>${ticket.soldFor > 0 ? formatCurrency(ticket.soldFor) : '-'}</td>
-                                    </tr>
-                                `).join('')}
-                            </tbody>
-                        </table>
-                    </div>
-                </div>
-            `;
+            if (currentDisplayMonth > 12) {
+                currentDisplayMonth = 1;
+                currentDisplayYear++;
+            } else if (currentDisplayMonth < 1) {
+                currentDisplayMonth = 12;
+                currentDisplayYear--;
+            }
+            
+            generateCalendar();
         }
-        
-        async function refreshData() {
-            const loadingElement = document.getElementById('loadingMessage');
-            const progressElement = document.getElementById('loadingProgress');
-            const refreshBtn = document.querySelector('.refresh-btn');
+
+        function closeModal(modalId) {
+            const modal = document.getElementById(modalId);
+            if (modal) {
+                modal.style.display = 'none';
+            }
+        }
+
+        function showDataInfo() {
+            document.getElementById('dataModal').style.display = 'block';
+        }
+
+        function exportDataAsPDF() {
+            const btn = document.getElementById('pdfExportBtn');
+            const btnText = document.getElementById('pdfBtnText');
+            const spinner = document.getElementById('pdfSpinner');
             
-            // Clear dashboard immediately when refresh is clicked
-            dashboardData = {
-                totalTickets: 0,
-                availableTickets: 0,
-                totalSpent: 0,
-                totalSales: 0,
-                netProfit: 0,
-                teams: []
-            };
-            updateDashboard(); // Show zeros immediately
-            
-            loadingElement.style.display = 'block';
-            progressElement.style.display = 'block';
-            refreshBtn.disabled = true;
-            refreshBtn.textContent = 'Loading...';
-            
+            const originalText = btnText.textContent;
+            btnText.textContent = 'Generating PDF...';
+            spinner.style.display = 'block';
+            btn.disabled = true;
+
             try {
-                const allTeams = [];
-                let successCount = 0;
-                let errorCount = 0;
+                if (typeof window.jspdf === 'undefined') {
+                    alert('PDF library not loaded. Please refresh the page and try again.');
+                    resetPdfButton();
+                    return;
+                }
+
+                const { jsPDF } = window.jspdf;
+                const doc = new jsPDF();
                 
-                console.log(`🚀 Starting to load ${SHEET_IDS.length} sheets...`);
-                
-                // Process sheets one by one with optimized logging
-                for (let i = 0; i < SHEET_IDS.length; i++) {
-                    const sheetId = SHEET_IDS[i];
+                const userName = currentUserProfile?.name || 'User';
+                const currentDateStr = new Date().toLocaleDateString('en-US', {
+                    weekday: 'long',
+                    year: 'numeric',
+                    month: 'long',
+                    day: 'numeric'
+                });
+
+                // Calculate statistics
+                let totalSalah = 0;
+                let prayedCount = 0;
+                let missedCount = 0;
+                let qadhaCount = 0;
+                const monthlyStats = {};
+                const dailyRecords = [];
+
+                Object.entries(prayerData).forEach(([date, dayData]) => {
+                    const month = date.substring(0, 7);
+                    if (!monthlyStats[month]) {
+                        monthlyStats[month] = { prayed: 0, missed: 0, qadha: 0 };
+                    }
+
+                    const dayRecord = { date, prayers: [] };
                     
-                    try {
-                        console.log(`\n📊 Processing sheet ${i + 1}/${SHEET_IDS.length}`);
-                        
-                        // Update progress bar
-                        const percentage = Math.round(((i + 1) / SHEET_IDS.length) * 100);
-                        document.getElementById('progressBar').style.width = `${percentage}%`;
-                        document.getElementById('progressText').textContent = `${percentage}% (${i + 1}/${SHEET_IDS.length})`;
-                        
-                        // Optimized single request approach - combine document info and sheet data
-                        let documentInfo, sheetData;
-                        
-                        // Get document info
-                        documentInfo = await fastFetch(
-                            `https://sheets.googleapis.com/v4/spreadsheets/${sheetId}?key=${API_KEY}&fields=properties.title,sheets.properties.title`,
-                            3500,
-                            1
-                        );
-                        console.log(`✅ Document title: "${documentInfo.properties.title}"`);
-                        
-                        // Get sheet data
-                        const response = await fastFetch(
-                            `https://sheets.googleapis.com/v4/spreadsheets/${sheetId}/values/DASHBOARD!A1:H50?key=${API_KEY}&valueRenderOption=UNFORMATTED_VALUE&dateTimeRenderOption=FORMATTED_STRING`,
-                            3500,
-                            1
-                        );
-                        sheetData = response.values || [];
-                        console.log(`✅ Retrieved ${sheetData.length} rows of data`);
-                        
-                        // Parse the data
-                        const documentTitle = documentInfo.properties.title;
-                        
-                        if (sheetData && sheetData.length > 0) {
-                            const teamData = parseSheetData(sheetData, 'DASHBOARD', documentTitle);
+                    prayers.forEach(prayer => {
+                        const status = dayData[prayer];
+                        if (status) {
+                            totalSalah++;
+                            dayRecord.prayers.push({ prayer, status });
                             
-                            if (teamData && teamData.totalTickets > 0) {
-                                allTeams.push(teamData);
-                                successCount++;
-                                console.log(`✅ Successfully loaded: "${teamData.name}" (${teamData.totalTickets} tickets, £${teamData.totalSpent} spent)`);
-                                
-                                // Cache the sheet ID for this team
-                                teamSheetCache.set(teamData.name, sheetId);
-                            } else {
-                                console.log(`⚠️ No valid team data found (no tickets or spending)`);
+                            if (status === 'prayed') {
+                                prayedCount++;
+                                monthlyStats[month].prayed++;
+                            } else if (status === 'missed') {
+                                missedCount++;
+                                monthlyStats[month].missed++;
+                            } else if (status === 'qadha') {
+                                qadhaCount++;
+                                monthlyStats[month].qadha++;
                             }
-                        } else {
-                            console.log(`⚠️ No data found in DASHBOARD sheet`);
                         }
-                        
-                    } catch (error) {
-                        errorCount++;
-                        console.log(`❌ Failed processing sheet ${i + 1}: ${error.message}`);
-                    }
+                    });
                     
-                    // Minimal delay between requests to avoid rate limiting while maximizing speed
-                    if (i < SHEET_IDS.length - 1) {
-                        await new Promise(resolve => setTimeout(resolve, 150)); // Reduced from 400ms
+                    if (dayRecord.prayers.length > 0) {
+                        dailyRecords.push(dayRecord);
                     }
-                }
+                });
+
+                generateSalahPDF(doc, {
+                    userName,
+                    currentDate: currentDateStr,
+                    totalSalah,
+                    prayedCount,
+                    missedCount,
+                    qadhaCount,
+                    monthlyStats,
+                    dailyRecords
+                });
                 
-                console.log(`\n📊 FINAL RESULTS:`);
-                console.log(`✅ Successfully loaded: ${successCount} teams`);
-                console.log(`❌ Failed to load: ${errorCount} sheets`);
-                console.log(`📋 Teams loaded: ${allTeams.map(t => t.name).join(', ')}`);
-                
-                if (allTeams.length === 0) {
-                    throw new Error(`No teams loaded successfully. Checked ${SHEET_IDS.length} sheets, ${errorCount} failed. Please check your internet connection and try again.`);
-                }
-                
-                // Update dashboard with final data
-                dashboardData.teams = allTeams;
-                dashboardData.totalTickets = allTeams.reduce((sum, team) => sum + team.totalTickets, 0);
-                dashboardData.totalSpent = allTeams.reduce((sum, team) => sum + team.totalSpent, 0);
-                dashboardData.totalSales = allTeams.reduce((sum, team) => sum + team.totalSales, 0);
-                dashboardData.netProfit = allTeams.reduce((sum, team) => sum + team.netProfit, 0);
-                dashboardData.availableTickets = allTeams.reduce((sum, team) => {
-                    return sum + team.matches.reduce((matchSum, match) => matchSum + match.tickets, 0);
-                }, 0);
-                
-                updateDashboard(); // Show final data
-                
-                // Show success message with details
-                const successMessage = `✅ Loaded ${allTeams.length} teams successfully!${errorCount > 0 ? ` (${errorCount} sheets had issues)` : ''}`;
-                progressElement.innerHTML = `<div class="success-message">${successMessage}</div>`;
+                const fileName = `salah_report_${userName.toLowerCase().replace(/\s+/g, '_')}_${new Date().toISOString().split('T')[0]}.pdf`;
+                doc.save(fileName);
                 
                 setTimeout(() => {
-                    progressElement.style.display = 'none';
-                    progressElement.innerHTML = `
-                        <div class="progress-container">
-                            <div class="progress-bar" id="progressBar"></div>
-                        </div>
-                        <div class="progress-text" id="progressText">0%</div>
-                    `;
-                }, 3000);
+                    alert('📄 PDF report generated successfully!');
+                }, 500);
                 
+                resetPdfButton();
+
             } catch (error) {
-                console.error('❌ Critical error during refresh:', error);
-                progressElement.innerHTML = `<div style="color: #ff3b30; text-align: center; padding: 16px;">❌ ${error.message}</div>`;
-                setTimeout(() => {
-                    progressElement.style.display = 'none';
-                    progressElement.innerHTML = `
-                        <div class="progress-container">
-                            <div class="progress-bar" id="progressBar"></div>
-                        </div>
-                        <div class="progress-text" id="progressText">0%</div>
-                    `;
-                }, 5000);
-            } finally {
-                loadingElement.style.display = 'none';
-                refreshBtn.disabled = false;
-                refreshBtn.textContent = 'Refresh Data';
+                console.error('Error generating PDF:', error);
+                alert('Error generating PDF: ' + error.message);
+                resetPdfButton();
+            }
+            
+            function resetPdfButton() {
+                btnText.textContent = originalText;
+                spinner.style.display = 'none';
+                btn.disabled = false;
             }
         }
-        
-        // Initial load when page loads
+
+        function generateSalahPDF(doc, data) {
+            // Header design
+            doc.setFillColor(24, 24, 24);
+            doc.rect(0, 0, 210, 40, 'F');
+            
+            doc.setFillColor(16, 163, 127);
+            doc.rect(0, 0, 210, 3, 'F');
+            
+            doc.setTextColor(255, 255, 255);
+            doc.setFontSize(16);
+            doc.setFont(undefined, 'bold');
+            doc.text('SALAH TRACKER REPORT', 105, 15, { align: 'center' });
+            
+            doc.setFontSize(12);
+            doc.setTextColor(230, 230, 230);
+            doc.text(`${data.userName}'s Prayer Journey`, 105, 22, { align: 'center' });
+            
+            doc.setTextColor(184, 184, 184);
+            doc.setFontSize(9);
+            doc.setFont(undefined, 'normal');
+            doc.text(`Generated on ${data.currentDate}`, 105, 28, { align: 'center' });
+            doc.text('Fajr • Zuhr • Asr • Maghrib • Isha', 105, 34, { align: 'center' });
+
+            let yPos = 50;
+
+            // Statistics cards
+            doc.setTextColor(31, 41, 55);
+            doc.setFontSize(14);
+            doc.setFont(undefined, 'bold');
+            doc.text('Prayer Statistics Overview', 105, yPos, { align: 'center' });
+
+            yPos += 10;
+
+            const statBoxWidth = 42;
+            const statBoxHeight = 25;
+            const startX = 15;
+            const gap = 5;
+
+            const stats = [
+                { label: 'Total', value: data.totalSalah, color: [99, 102, 241] },
+                { label: 'Prayed', value: data.prayedCount, color: [16, 163, 127] },
+                { label: 'Missed', value: data.missedCount, color: [239, 68, 68] },
+                { label: 'Qadha', value: data.qadhaCount, color: [245, 158, 11] }
+            ];
+
+            stats.forEach((stat, index) => {
+                const x = startX + (statBoxWidth + gap) * index;
+                
+                doc.setFillColor(248, 250, 252);
+                doc.roundedRect(x, yPos, statBoxWidth, statBoxHeight, 3, 3, 'F');
+                
+                doc.setDrawColor(226, 232, 240);
+                doc.setLineWidth(0.5);
+                doc.roundedRect(x, yPos, statBoxWidth, statBoxHeight, 3, 3, 'S');
+                
+                doc.setTextColor(stat.color[0], stat.color[1], stat.color[2]);
+                doc.setFontSize(18);
+                doc.setFont(undefined, 'bold');
+                doc.text(stat.value.toString(), x + statBoxWidth / 2, yPos + 12, { align: 'center' });
+                
+                doc.setTextColor(100, 116, 139);
+                doc.setFontSize(9);
+                doc.setFont(undefined, 'normal');
+                doc.text(stat.label, x + statBoxWidth / 2, yPos + 20, { align: 'center' });
+            });
+
+            yPos += 35;
+
+            // Completion rate
+            const completionRate = data.totalSalah > 0 ? Math.round(((data.prayedCount + data.qadhaCount) / data.totalSalah) * 100) : 0;
+            
+            doc.setTextColor(31, 41, 55);
+            doc.setFontSize(12);
+            doc.setFont(undefined, 'bold');
+            doc.text('Prayer Completion Rate', 105, yPos, { align: 'center' });
+            
+            yPos += 8;
+            
+            const barWidth = 160;
+            const barHeight = 8;
+            const barX = (210 - barWidth) / 2;
+            
+            doc.setFillColor(229, 231, 235);
+            doc.roundedRect(barX, yPos, barWidth, barHeight, 4, 4, 'F');
+            
+            const progressWidth = (barWidth * completionRate) / 100;
+            doc.setFillColor(16, 163, 127);
+            doc.roundedRect(barX, yPos, progressWidth, barHeight, 4, 4, 'F');
+            
+            doc.setTextColor(31, 41, 55);
+            doc.setFontSize(11);
+            doc.setFont(undefined, 'bold');
+            doc.text(`${completionRate}% Complete`, 105, yPos + 15, { align: 'center' });
+
+            yPos += 25;
+
+            // Monthly breakdown
+            if (Object.keys(data.monthlyStats).length > 0) {
+                doc.setTextColor(31, 41, 55);
+                doc.setFontSize(12);
+                doc.setFont(undefined, 'bold');
+                doc.text('Monthly Summary', 15, yPos);
+
+                yPos += 8;
+
+                const monthlyData = Object.entries(data.monthlyStats)
+                    .sort()
+                    .reverse()
+                    .slice(0, 6)
+                    .map(([month, stats]) => {
+                        const monthName = new Date(month + '-01').toLocaleDateString('en-US', { year: 'numeric', month: 'short' });
+                        const monthTotal = stats.prayed + stats.missed + stats.qadha;
+                        const monthCompleted = stats.prayed + stats.qadha;
+                        const monthCompletionRate = monthTotal > 0 ? Math.round((monthCompleted / monthTotal) * 100) : 0;
+                        
+                        return [monthName, stats.prayed.toString(), stats.missed.toString(), stats.qadha.toString(), `${monthCompletionRate}%`];
+                    });
+
+                if (monthlyData.length > 0) {
+                    doc.autoTable({
+                        startY: yPos,
+                        head: [['Month', 'Prayed', 'Missed', 'Qadha', 'Complete']],
+                        body: monthlyData,
+                        theme: 'striped',
+                        headStyles: { 
+                            fillColor: [16, 163, 127], 
+                            textColor: [255, 255, 255],
+                            fontSize: 10,
+                            fontStyle: 'bold'
+                        },
+                        bodyStyles: { 
+                            fontSize: 9,
+                            cellPadding: 4
+                        },
+                        columnStyles: {
+                            0: { cellWidth: 50 },
+                            1: { cellWidth: 32, halign: 'center', fillColor: [240, 253, 244] },
+                            2: { cellWidth: 32, halign: 'center', fillColor: [254, 242, 242] },
+                            3: { cellWidth: 32, halign: 'center', fillColor: [255, 251, 235] },
+                            4: { cellWidth: 34, halign: 'center', fontStyle: 'bold' }
+                        },
+                        margin: { left: 15, right: 15 },
+                        tableWidth: 180
+                    });
+                    
+                    yPos = doc.lastAutoTable.finalY + 15;
+                }
+            }
+
+            // Recent prayer records
+            if (data.dailyRecords.length > 0) {
+                if (yPos > 200) {
+                    doc.addPage();
+                    yPos = 20;
+                }
+
+                doc.setTextColor(31, 41, 55);
+                doc.setFontSize(12);
+                doc.setFont(undefined, 'bold');
+                doc.text('Recent Prayer Records', 15, yPos);
+
+                yPos += 8;
+
+                const recentRecords = data.dailyRecords
+                    .sort((a, b) => new Date(b.date) - new Date(a.date))
+                    .slice(0, 15);
+
+                recentRecords.forEach(record => {
+                    const dateObj = new Date(record.date);
+                    const dateStr = dateObj.toLocaleDateString('en-US', { 
+                        weekday: 'short',
+                        month: 'short', 
+                        day: 'numeric' 
+                    });
+
+                    doc.setFillColor(248, 250, 252);
+                    doc.rect(15, yPos, 180, 8, 'F');
+                    doc.setTextColor(75, 85, 99);
+                    doc.setFontSize(9);
+                    doc.setFont(undefined, 'bold');
+                    doc.text(dateStr, 18, yPos + 5.5);
+
+                    yPos += 10;
+
+                    const prayerStatusText = record.prayers.map(p => {
+                        const icon = p.status === 'prayed' ? 'DONE' : p.status === 'missed' ? 'MISS' : 'QADHA';
+                        const prayerName = p.prayer.charAt(0).toUpperCase() + p.prayer.slice(1);
+                        return `${icon}: ${prayerName}`;
+                    }).join('  |  ');
+
+                    doc.setTextColor(100, 116, 139);
+                    doc.setFontSize(8);
+                    doc.setFont(undefined, 'normal');
+                    const wrappedText = doc.splitTextToSize(prayerStatusText, 170);
+                    doc.text(wrappedText, 18, yPos);
+                    
+                    yPos += wrappedText.length * 4 + 3;
+
+                    if (yPos > 250) {
+                        doc.addPage();
+                        yPos = 20;
+                    }
+                });
+            }
+
+            // Footer
+            const pageCount = doc.internal.getNumberOfPages();
+            for (let i = 1; i <= pageCount; i++) {
+                doc.setPage(i);
+                doc.setTextColor(107, 114, 128);
+                doc.setFontSize(8);
+                doc.setFont(undefined, 'normal');
+                doc.text('Generated by Salah Tracker App', 105, 285, { align: 'center' });
+                doc.text('May Allah accept your prayers and guide you on the straight path.', 105, 290, { align: 'center' });
+            }
+        }
+
+        function clearData() {
+            if (confirm('Are you sure you want to clear ALL your prayer data? This cannot be undone.')) {
+                if (confirm('This will permanently delete all your prayer records. Continue?')) {
+                    if (currentUserProfile) {
+                        localStorage.removeItem(`salahTracker_${currentUserProfile.accessCode}`);
+                    }
+                    
+                    currentUser = null;
+                    currentUserProfile = null;
+                    prayerData = {};
+                    
+                    closeModal('dataModal');
+                    location.reload();
+                }
+            }
+        }
+
+        async function logout() {
+            try {
+                if (dataListener) {
+                    dataListener();
+                    dataListener = null;
+                }
+                
+                if (window.firebase && window.firebase.auth && currentFirebaseUser) {
+                    await window.firebase.auth.signOut();
+                }
+                
+                currentUser = null;
+                currentUserProfile = null;
+                currentFirebaseUser = null;
+                prayerData = {};
+                
+                document.getElementById('mainContent').style.display = 'none';
+                document.getElementById('loginSection').style.display = 'block';
+                document.getElementById('accessCode').value = '';
+                
+                window.updateCloudStatus('offline', '📱 Offline Mode');
+                
+            } catch (error) {
+                console.error('Logout error:', error);
+            }
+        }
+
+        function showError(message) {
+            const errorEl = document.getElementById('errorMessage');
+            if (errorEl) {
+                errorEl.textContent = message;
+                errorEl.style.display = 'block';
+                setTimeout(() => {
+                    errorEl.style.display = 'none';
+                }, 5000);
+            }
+        }
+
+        function showSuccess(message) {
+            const successEl = document.getElementById('successMessage');
+            if (successEl) {
+                successEl.textContent = message;
+                successEl.style.display = 'block';
+                setTimeout(() => {
+                    successEl.style.display = 'none';
+                }, 5000);
+            }
+        }
+
+        // Close modals when clicking outside
+        window.onclick = function(event) {
+            const modals = ['prayerModal', 'dayModal', 'statsModal', 'dataModal', 'signupModal'];
+            modals.forEach(modalId => {
+                const modal = document.getElementById(modalId);
+                if (event.target === modal) {
+                    closeModal(modalId);
+                    if (modalId === 'prayerModal') {
+                        setTimeout(() => {
+                            currentPrayer = null;
+                            currentDate = null;
+                        }, 100);
+                    }
+                }
+            });
+        }
+
+        // Allow Enter key for inputs
         document.addEventListener('DOMContentLoaded', function() {
-            // Check if we're online before loading
-            if (navigator.onLine) {
-                refreshData();
-            } else {
-                document.getElementById('offlineIndicator').classList.add('show');
-                // Try to load from cache if available
-                updateDashboard();
+            const accessCodeInput = document.getElementById('accessCode');
+            if (accessCodeInput) {
+                accessCodeInput.addEventListener('keypress', function(e) {
+                    if (e.key === 'Enter') {
+                        login();
+                    }
+                });
             }
         });
+
+        // Initialize app when page loads
+        if (document.readyState === 'loading') {
+            document.addEventListener('DOMContentLoaded', init);
+        } else {
+            init();
+        }
     </script>
 </body>
 </html>
