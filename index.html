@@ -1609,6 +1609,8 @@
         function updateTodaysPrayers() {
             const today = getDateKey();
             const todayData = prayerData[today] || {};
+            const todayDate = new Date();
+            const isFriday = todayDate.getDay() === 5;
 
             prayers.forEach(prayer => {
                 const row = document.querySelector(`[data-prayer="${prayer}"]`);
@@ -1616,6 +1618,14 @@
                 
                 const status = todayData[prayer] || 'not-set';
                 const statusElement = row.querySelector('.prayer-status');
+                const prayerNameElement = row.querySelector('.prayer-details h4');
+                const prayerIconElement = row.querySelector('.prayer-icon');
+
+                // Update prayer name for Zuhr/Jumu'ah
+                if (prayer === 'zuhr') {
+                    prayerNameElement.textContent = isFriday ? 'Jumu\'ah' : 'Zuhr';
+                    prayerIconElement.textContent = isFriday ? '🕌' : '☀️';
+                }
 
                 row.classList.remove('prayed', 'missed', 'qadha');
 
@@ -1659,7 +1669,13 @@
         function openPrayerModal(prayer, prayerName) {
             currentPrayer = prayer;
             currentDate = null;
-            document.getElementById('modalTitle').textContent = `${prayerName} Salah`;
+            
+            // Check if it's Friday and prayer is Zuhr
+            const today = new Date();
+            const isFriday = today.getDay() === 5;
+            const displayName = (prayer === 'zuhr' && isFriday) ? 'Jumu\'ah' : prayerName;
+            
+            document.getElementById('modalTitle').textContent = `${displayName} Salah`;
             document.getElementById('prayerModal').style.display = 'block';
         }
 
@@ -1900,7 +1916,7 @@
             
             prayers.forEach((prayer, index) => {
                 const status = dayData[prayer] || 'not-set';
-                const prayerName = prayer.charAt(0).toUpperCase() + prayer.slice(1);
+                const prayerName = getPrayerNameForDate(prayer, dateKey);
                 
                 const prayerItem = document.createElement('div');
                 prayerItem.className = 'prayer-row';
@@ -1936,7 +1952,7 @@
                 
                 prayerItem.innerHTML = `
                     <div class="prayer-info">
-                        <div class="prayer-icon">${getPrayerIcon(prayer)}</div>
+                        <div class="prayer-icon">${getPrayerIcon(prayer, dateKey)}</div>
                         <div class="prayer-details">
                             <h4>${prayerName}</h4>
                             <p></p>
@@ -1960,7 +1976,24 @@
             document.getElementById('dayModal').style.display = 'block';
         }
 
-        function getPrayerIcon(prayer) {
+        function getPrayerNameForDate(prayer, dateKey) {
+            if (prayer === 'zuhr') {
+                const date = new Date(dateKey);
+                const isFriday = date.getDay() === 5;
+                return isFriday ? 'Jumu\'ah' : 'Zuhr';
+            }
+            return prayer.charAt(0).toUpperCase() + prayer.slice(1);
+        }
+
+        function getPrayerIcon(prayer, dateKey = null) {
+            if (prayer === 'zuhr' && dateKey) {
+                const date = new Date(dateKey);
+                const isFriday = date.getDay() === 5;
+                if (isFriday) {
+                    return '🕌'; // Mosque icon for Jumu'ah
+                }
+            }
+            
             const icons = {
                 'fajr': '🌅',
                 'zuhr': '☀️',
